@@ -17,6 +17,12 @@ class TestPacketFilters:
         self, selenium: MiminetTester, network: MiminetTestNetwork
     ):
         selenium.get(network.url)
+        selenium.wait_for(
+            lambda driver: driver.execute_script(
+                "return typeof SetPacketFilter === 'function' && typeof filterState !== 'undefined';"
+            ),
+            timeout=10,
+        )
 
         # prepare cached packets and drop active player state, emulating SetNetworkPlayerState(-1)
         result = selenium.execute_script(
@@ -51,6 +57,12 @@ class TestPacketFilters:
         self, selenium: MiminetTester, network: MiminetTestNetwork
     ):
         selenium.get(network.url)
+        selenium.wait_for(
+            lambda driver: driver.execute_script(
+                "return typeof SetPacketFilter === 'function' && typeof filterState !== 'undefined';"
+            ),
+            timeout=10,
+        )
 
         result = selenium.execute_script(
             """
