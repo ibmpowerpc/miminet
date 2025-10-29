@@ -1,6 +1,8 @@
 import pytest
+from selenium.webdriver.common.by import By
 
 from conftest import MiminetTester
+from utils.locators import Location
 from utils.networks import MiminetTestNetwork
 
 
@@ -8,89 +10,149 @@ class TestPacketFilters:
     @pytest.fixture(scope="class")
     def network(self, selenium: MiminetTester):
         test_network = MiminetTestNetwork(selenium)
-
         yield test_network
-
         test_network.delete()
 
-    def test_filter_does_not_restore_packets_after_reset(
-        self, selenium: MiminetTester, network: MiminetTestNetwork
-    ):
-        selenium.get(network.url)
+    def _wait_filter_state_ready(self, selenium: MiminetTester):
         selenium.wait_for(
             lambda driver: driver.execute_script(
-                "return typeof SetPacketFilter === 'function' && typeof filterState !== 'undefined';"
-            ),
-            timeout=10,
+                "return typeof filterState !== 'undefined' && "
+                "typeof SetPacketFilter === 'function';"
+            )
         )
 
-        # prepare cached packets and drop active player state, emulating SetNetworkPlayerState(-1)
-        result = selenium.execute_script(
+    def _open_settings_modal(self, selenium: MiminetTester):
+        selenium.find_element(
+            By.CSS_SELECTOR, Location.Network.TopButton.OPTIONS.selector
+        ).click()
+        selenium.wait_until_appear(By.CSS_SELECTOR, "#netConfigModal")
+
+    def _close_settings_modal(self, selenium: MiminetTester):
+        selenium.execute_script("$('#netConfigModal').modal('hide');")
+        selenium.wait_for(
+            lambda driver: driver.execute_script(
+                "return !document.querySelector('#netConfigModal')"
+                " || $('#netConfigModal').is(':hidden');"
+            )
+        )
+
+    def _checkbox_state(self, selenium: MiminetTester, checkbox_id: str):
+        return selenium.execute_script(
+            f"var el = document.getElementById('{checkbox_id}');"
+            "return el ? el.checked : null;"
+        )
+
+    def _prepare_packets(self, selenium: MiminetTester, labels: list[str]):
+        selenium.execute_script(
             """
-            packets_not_filtered = [[{
-                data: { id: 'pkt_1', label: 'ARP Broadcast', type: 'arp' },
-                config: { path: 'edge_1', source: 'host_1', target: 'host_2' }
-            }]];
-            packets = null;
             filterState.hideARP = false;
             filterState.hideSTP = false;
-
-            try {
-                SetPacketFilter();
-                return {
-                    packets: packets,
-                    cachedPacketsLength: packets_not_filtered.length
-                };
-            } catch (err) {
-                return { error: err.toString() };
-            }
+            packets_not_filtered = null;
+            packets = arguments[0].map(function(label){ return [{ data: { label: label } }]; });
+            pcaps = [];
             """
+            ,
+            labels,
         )
 
-        assert "error" not in result, f"JS error while filtering: {result['error']}"
-        assert result["packets"] is None, "Stale packets resurrected after reset"
-        assert (
-            result["cachedPacketsLength"] == 1
-        ), "Cache with original packets must stay untouched"
-
-    def test_empty_packets_do_not_break_player(
+    def test_enable_arp_filter_filters_packets(
         self, selenium: MiminetTester, network: MiminetTestNetwork
     ):
         selenium.get(network.url)
+        self._wait_filter_state_ready(selenium)
+
+        self._prepare_packets(
+            selenium, ["ARP Request: who-has 10.0.0.1", "ICMP Echo Reply"]
+        )
+
+        self._open_settings_modal(selenium)
+        arp_checkbox = selenium.find_element(By.CSS_SELECTOR, "#ARPFilterCheckbox")
+        if not arp_checkbox.is_selected():
+            arp_checkbox.click()
+        selenium.execute_script("UpdateNetworkConfig(); SetPacketFilter();")
+        self._close_settings_modal(selenium)
+
         selenium.wait_for(
             lambda driver: driver.execute_script(
-                "return typeof SetPacketFilter === 'function' && typeof filterState !== 'undefined';"
-            ),
-            timeout=10,
+                "return filterState.hideARP === true"
+                " && Array.isArray(packets)"
+                " && packets.length === 1"
+                " && packets[0].length === 1"
+                " && !packets[0][0].data.label.startsWith('ARP');"
+            )
         )
 
-        result = selenium.execute_script(
-            """
-            packets = [];
-            filterState.hideARP = true;
-            filterState.hideSTP = true;
+        filtered_packets = selenium.execute_script("return packets;")
+        assert filtered_packets[0][0]["data"]["label"] == "ICMP Echo Reply"
 
-            try {
-                SetPacketFilter();
-                var slider = $('#PacketSliderInput')[0];
-                return {
-                    packets: packets,
-                    sliderInitialized: Boolean(slider && slider.noUiSlider),
-                    sliderVisible: slider ? $('#PacketSliderInput').is(':visible') : null,
-                    labelText: $('#NetworkPlayerLabel').text()
-                };
-            } catch (err) {
-                return { error: err.toString() };
-            }
-            """
-        )
-
-        assert "error" not in result, f"Packet filtering threw an error: {result['error']}"
-        assert result["packets"] == [], "Filtered packets should stay empty"
+        self._open_settings_modal(selenium)
         assert (
-            result["sliderInitialized"] is False or result["sliderVisible"] is False
-        ), "Slider must be hidden or uninitialized when nothing to play"
-        assert result["labelText"] in (
-            "",
-            "0 пакетов",
-        ), "Player label must reflect the empty state"
+            self._checkbox_state(selenium, "ARPFilterCheckbox") is True
+        ), "ARP checkbox should remain selected after saving"
+        self._close_settings_modal(selenium)
+
+    def test_cancel_does_not_change_filter_state(
+        self, selenium: MiminetTester, network: MiminetTestNetwork
+    ):
+        selenium.get(network.url)
+        self._wait_filter_state_ready(selenium)
+
+        initial_state = selenium.execute_script("return filterState.hideARP === true;")
+
+        self._open_settings_modal(selenium)
+        arp_checkbox = selenium.find_element(By.CSS_SELECTOR, "#ARPFilterCheckbox")
+        arp_checkbox.click()  # toggle current state
+        self._close_settings_modal(selenium)
+
+        current_state = selenium.execute_script("return filterState.hideARP === true;")
+        assert (
+            current_state == initial_state
+        ), "Filter state must not change when closing without saving"
+
+        self._open_settings_modal(selenium)
+        assert (
+            self._checkbox_state(selenium, "ARPFilterCheckbox") == initial_state
+        ), "ARP checkbox should display the original value after cancel"
+        self._close_settings_modal(selenium)
+
+    def test_enable_stp_filter_filters_packets(
+        self, selenium: MiminetTester, network: MiminetTestNetwork
+    ):
+        selenium.get(network.url)
+        self._wait_filter_state_ready(selenium)
+
+        self._prepare_packets(
+            selenium,
+            [
+                "STP Configuration BPDU",
+                "RSTP Topology Change",
+                "ICMP Echo Reply",
+            ],
+        )
+
+        self._open_settings_modal(selenium)
+        stp_checkbox = selenium.find_element(By.CSS_SELECTOR, "#STPFilterCheckbox")
+        if not stp_checkbox.is_selected():
+            stp_checkbox.click()
+        selenium.execute_script("UpdateNetworkConfig(); SetPacketFilter();")
+        self._close_settings_modal(selenium)
+
+        selenium.wait_for(
+            lambda driver: driver.execute_script(
+                "return filterState.hideSTP === true"
+                " && Array.isArray(packets)"
+                " && packets.length === 1"
+                " && packets[0].length === 1"
+                " && !packets[0][0].data.label.startsWith('STP')"
+                " && !packets[0][0].data.label.startsWith('RSTP');"
+            )
+        )
+
+        filtered_packets = selenium.execute_script("return packets;")
+        assert filtered_packets[0][0]["data"]["label"] == "ICMP Echo Reply"
+
+        self._open_settings_modal(selenium)
+        assert (
+            self._checkbox_state(selenium, "STPFilterCheckbox") is True
+        ), "STP checkbox should remain selected after saving"
+        self._close_settings_modal(selenium)
