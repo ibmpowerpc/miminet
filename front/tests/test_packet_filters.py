@@ -50,8 +50,7 @@ class TestPacketFilters:
             packets_not_filtered = null;
             packets = arguments[0].map(function(label){ return [{ data: { label: label } }]; });
             pcaps = [];
-            """
-            ,
+            """,
             labels,
         )
 
