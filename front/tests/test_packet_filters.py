@@ -82,7 +82,7 @@ class TestPacketFilters:
         )
 
         filtered_packets = selenium.execute_script("return packets;")
-        assert filtered_packets[0][0]["data"]["label"] == "ICMP Echo Reply"
+        assert filtered_packets[0][0]["data"]["label"] == "ICMP packet"
 
         self._open_settings_modal(selenium)
         assert self._checkbox_state(selenium, "ARPFilterCheckbox") is True, (
