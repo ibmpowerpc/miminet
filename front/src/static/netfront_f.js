@@ -4,41 +4,7 @@ let global_eh = undefined;
 var NetworkUpdateTimeoutId = -1;
 let NetworkCache = [];
 
-let packets_not_filtered = null;
-let filterState = {
-    hideARP: false,
-    hideSTP: false,
-};
-
-const normalizeInterfaceMasks = function (data, prefix) {
-    try {
-        const params = new URLSearchParams(data);
-
-        params.forEach((value, key) => {
-            if (!key.startsWith(prefix + '_ip_')) {
-                return;
-            }
-
-            const maskKey = key.replace('_ip_', '_mask_');
-            if (!params.has(maskKey)) {
-                return;
-            }
-
-            const maskVal = params.get(maskKey);
-            if (!maskVal || maskVal === '0') {
-                params.set(maskKey, '24');
-            }
-        });
-
-        return params.toString();
-    } catch (err) {
-        console.warn('Unable to normalize interface masks', err);
-        return data;
-    }
-};
-
-
-const uid = function () {
+const uid = function(){
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
@@ -1310,10 +1276,7 @@ const CheckSimulation = function (simulation_id)
             {
                 packets = JSON.parse(data.packets);
                 pcaps = data.pcaps;
-
-                // Set filters
-                packets_not_filtered = null;
-                SetPacketFilter();
+                SetNetworkPlayerState(0);
 
                 const answerButton = document.querySelector('button[name="answerQuestion"]');
                 if (answerButton) {
@@ -1405,8 +1368,6 @@ const UpdateHostConfiguration = function (data, host_id)
 {
     // Reset network player
     SetNetworkPlayerState(-1);
-
-    data = normalizeInterfaceMasks(data, 'config_host');
 
     $.ajax({
         type: 'POST',
@@ -1610,8 +1571,6 @@ const UpdateRouterConfiguration = function (data, router_id)
     // Reset network player
     SetNetworkPlayerState(-1);
 
-    data = normalizeInterfaceMasks(data, 'config_router');
-
     $.ajax({
         type: 'POST',
         url: '/host/router_save_config',
@@ -1671,8 +1630,6 @@ const UpdateServerConfiguration = function (data, router_id)
     // Reset network player
     SetNetworkPlayerState(-1);
 
-    data = normalizeInterfaceMasks(data, 'config_server');
-
     $.ajax({
         type: 'POST',
         url: '/host/server_save_config',
@@ -1729,8 +1686,6 @@ const UpdateServerConfiguration = function (data, router_id)
 // Update hub configuration
 const UpdateHubConfiguration = function (data, hub_id)
 {
-    data = normalizeInterfaceMasks(data, 'config_hub');
-
     $.ajax({
         type: 'POST',
         url: '/host/hub_save_config',
@@ -1776,8 +1731,6 @@ const UpdateSwitchConfiguration = function (data, switch_id)
 {
     // Reset network player
     SetNetworkPlayerState(-1);
-
-    data = normalizeInterfaceMasks(data, 'config_switch');
 
     $.ajax({
         type: 'POST',
@@ -1845,56 +1798,6 @@ const RunSimulation = function (network_guid)
     });
 }
 
-
-const FilterPackets = function () {
-    if (filterState.hideARP)
-        packets = packets.map((step) =>
-            step.filter((pkt) =>
-                !(pkt.data.label.startsWith('ARP'))
-            )
-        ).filter(step => step.length > 0);
-
-
-    if (filterState.hideSTP)
-        packets = packets.map((step) =>
-            step.filter((pkt) =>
-                !(pkt.data.label.startsWith('STP') ||
-                    pkt.data.label.startsWith('RSTP'))
-            )
-        ).filter(step => step.length > 0);
-    console.log("filterState:", filterState);
-    console.log("Packets after filters:", packets);
-
-}
-
-const RecoverFilterStates = function () {
-    $("#ARPFilterCheckbox").prop('checked', filterState.hideARP);
-    $("#STPFilterCheckbox").prop('checked', filterState.hideSTP);
-}
-
-const SetPacketFilter = function () {
-    console.log("Packet filter call");
-    // SetPacketFilter first call on emulated network
-    if (packets && !packets_not_filtered) {
-        packets_not_filtered = JSON.parse(JSON.stringify(packets)); // Array deep copy
-    }
-    // Numerous filter call, we grab our packets copy to filter it
-    else if (packets_not_filtered) {
-        packets = JSON.parse(JSON.stringify(packets_not_filtered));
-    }
-
-    filterState.hideARP = $('#ARPFilterCheckbox').is(':checked');
-    filterState.hideSTP = $('#STPFilterCheckbox').is(':checked');
-
-    console.log("filterState after filter call:", filterState);
-    if (packets) {
-        console.log('packets here');
-        FilterPackets();
-
-        SetNetworkPlayerState(0);
-    }
-}
-
 // 2 states:
 // Do we need emulation
 // We have a packets and ready to play packets
@@ -1904,7 +1807,6 @@ const SetNetworkPlayerState = function(simultaion_id)
     // Reset?
     if (simultaion_id === -1){
         packets = null;
-        packets_not_filtered = null;
         pcaps = [];
         SetNetworkPlayerState(0);
         return;
