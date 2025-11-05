@@ -8,7 +8,34 @@ let packets_not_filtered = null;
 let filterState = {
     hideARP: false,
     hideSTP: false,
-}
+};
+
+const normalizeInterfaceMasks = function (data, prefix) {
+    try {
+        const params = new URLSearchParams(data);
+
+        params.forEach((value, key) => {
+            if (!key.startsWith(prefix + '_ip_')) {
+                return;
+            }
+
+            const maskKey = key.replace('_ip_', '_mask_');
+            if (!params.has(maskKey)) {
+                return;
+            }
+
+            const maskVal = params.get(maskKey);
+            if (!maskVal || maskVal === '0') {
+                params.set(maskKey, '24');
+            }
+        });
+
+        return params.toString();
+    } catch (err) {
+        console.warn('Unable to normalize interface masks', err);
+        return data;
+    }
+};
 
 
 const uid = function () {
@@ -1379,6 +1406,8 @@ const UpdateHostConfiguration = function (data, host_id)
     // Reset network player
     SetNetworkPlayerState(-1);
 
+    data = normalizeInterfaceMasks(data, 'config_host');
+
     $.ajax({
         type: 'POST',
         url: '/host/save_config',
@@ -1581,6 +1610,8 @@ const UpdateRouterConfiguration = function (data, router_id)
     // Reset network player
     SetNetworkPlayerState(-1);
 
+    data = normalizeInterfaceMasks(data, 'config_router');
+
     $.ajax({
         type: 'POST',
         url: '/host/router_save_config',
@@ -1640,6 +1671,8 @@ const UpdateServerConfiguration = function (data, router_id)
     // Reset network player
     SetNetworkPlayerState(-1);
 
+    data = normalizeInterfaceMasks(data, 'config_server');
+
     $.ajax({
         type: 'POST',
         url: '/host/server_save_config',
@@ -1696,6 +1729,8 @@ const UpdateServerConfiguration = function (data, router_id)
 // Update hub configuration
 const UpdateHubConfiguration = function (data, hub_id)
 {
+    data = normalizeInterfaceMasks(data, 'config_hub');
+
     $.ajax({
         type: 'POST',
         url: '/host/hub_save_config',
@@ -1741,6 +1776,8 @@ const UpdateSwitchConfiguration = function (data, switch_id)
 {
     // Reset network player
     SetNetworkPlayerState(-1);
+
+    data = normalizeInterfaceMasks(data, 'config_switch');
 
     $.ajax({
         type: 'POST',
