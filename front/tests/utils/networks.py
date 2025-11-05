@@ -274,62 +274,15 @@ class NodeConfig:
             link_id: Link number in the config list (starts from 0)."""
         self.__check_config_open()
 
-        node_type = self.__node.get("config", {}).get("type", "")
-        type_mapping = {
-            "host": "config_host",
-            "router": "config_router",
-            "server": "config_server",
-            "l1_hub": "config_hub",
-            "l2_switch": "config_switch",
-        }
-        prefix = type_mapping.get(node_type)
-
-        if not prefix:
-            raise Exception(f"Unsupported node type '{node_type}' for link filling")
-
         try:
-            self.__selenium.execute_script(
-                """
-                const ipValue = arguments[0];
-                const maskValue = arguments[1].toString();
-                const elementPrefix = arguments[2];
-                const index = arguments[3];
-
-                const container = document.querySelector('#config_content');
-                if (!container) {
-                    throw new Error('Config content container not found');
-                }
-
-                const ipInputs = container.querySelectorAll(
-                    "input[id^='" + elementPrefix + "_ip_']"
-                );
-                const maskInputs = container.querySelectorAll(
-                    "input[id^='" + elementPrefix + "_mask_']"
-                );
-
-                if (index >= ipInputs.length || index >= maskInputs.length) {
-                    throw new Error('Requested interface index is out of range');
-                }
-
-                ipInputs[index].value = '';
-                ipInputs[index].dispatchEvent(new Event('input', { bubbles: true }));
-                ipInputs[index].value = ipValue;
-                ipInputs[index].dispatchEvent(new Event('input', { bubbles: true }));
-
-                maskInputs[index].value = '';
-                maskInputs[index].dispatchEvent(new Event('input', { bubbles: true }));
-                maskInputs[index].value = maskValue;
-                maskInputs[index].dispatchEvent(new Event('input', { bubbles: true }));
-                """,
-                ip,
-                mask,
-                prefix,
-                link_id,
-            )
-        except Exception as exc:
-            raise Exception(
-                "Unable to locate interface inputs. Ensure the node has enough links configured."
-            ) from exc
+            self.__selenium.find_element(
+                By.XPATH, Location.Network.ConfigPanel.get_ip_field_xpath(link_id)
+            ).send_keys(ip)
+            self.__selenium.find_element(
+                By.XPATH, Location.Network.ConfigPanel.get_mask_field_xpath(link_id)
+            ).send_keys(str(mask))
+        except Exception:
+            raise Exception("Unable to find link. Maybe you forgot to add edges.")
 
     def fill_links(self, ip_mask_list: list):
         """Fill multiple links (in config panel) with IP addresses and masks.
