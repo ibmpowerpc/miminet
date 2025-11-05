@@ -265,20 +265,23 @@ class Location:
             # The only stable way for finding ip/subnet mask on page is using XPATHs
 
             @staticmethod
-            def get_ip_field_xpath(id: int = 0):
-                """XPATH for specific ip address from config panel.
-                Args:
-                    id (int): Position of link in links list. Starts from 0."""
-                assert id >= 0, "IP field can't have index less than 0."
-                return f"/html/body/main/section/div[2]/div[2]/div[2]/form/div[{4 + id * 2}]/input[1]"
+            def get_interface_by_index(index: int):
+                assert index >= 0, "Interface index must be non-negative"
+                return Locator(f"#config_host_interface_{index}")
 
             @staticmethod
-            def get_mask_field_xpath(id: int = 0):
-                """XPATH for specific subnet mask from config panel.
-                Args:
-                    id (int): Position of link in links list. Starts from 0."""
-                assert id >= 0, "Subnet mask field can't have index less than 0."
-                return f"/html/body/main/section/div[2]/div[2]/div[2]/form/div[{4 + id * 2}]/input[2]"
+            def get_ip_field_locator(interface_id: str | None = None, index: int | None = None):
+                if interface_id is not None:
+                    return Locator(f"#config_host_ip_{interface_id}")
+                assert index is not None, "Either interface_id or index must be provided"
+                return Locator(f"#config_host_interface_{index} input[id^='config_host_ip_']")
+
+            @staticmethod
+            def get_mask_field_locator(interface_id: str | None = None, index: int | None = None):
+                if interface_id is not None:
+                    return Locator(f"#config_host_mask_{interface_id}")
+                assert index is not None, "Either interface_id or index must be provided"
+                return Locator(f"#config_host_interface_{index} input[id^='config_host_mask_']")
 
             MODAL_ERROR_DIALOG = Locator("#config_content > div")
 
