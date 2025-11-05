@@ -48,7 +48,7 @@ class Location:
             Args:
                 id (int): Position of network in networks list. Starts from 0."""
             assert id >= 0, "Network button can't have index less than 0."
-            return f"/html/body/section/div/div/div[{id+2}]"
+            return f"/html/body/section/div/div/div[{id + 2}]"
 
     class Network:
         """Specific network page."""
@@ -143,7 +143,7 @@ class Location:
                         Args:
                             id (int): Position of row in VLAN table. Starts from 0."""
                         assert id >= 0, "Row can't have index less than 0."
-                        return f'//*[@id="config_table_vlan_{switch_name}"]/table/tbody/tr[{id+1}]'
+                        return f'//*[@id="config_table_vlan_{switch_name}"]/table/tbody/tr[{id + 1}]'
 
             class Host(CommonDevice):
                 MAIN_FORM = Locator("#config_main_form")
@@ -265,23 +265,20 @@ class Location:
             # The only stable way for finding ip/subnet mask on page is using XPATHs
 
             @staticmethod
-            def get_interface_by_index(index: int):
-                assert index >= 0, "Interface index must be non-negative"
-                return Locator(f"#config_host_interface_{index}")
+            def get_ip_field_xpath(id: int = 0):
+                """XPATH for specific ip address from config panel.
+                Args:
+                    id (int): Position of link in links list. Starts from 0."""
+                assert id >= 0, "IP field can't have index less than 0."
+                return f"/html/body/main/section/div[2]/div[2]/div[2]/form/div[{4 + id * 2}]/input[1]"
 
             @staticmethod
-            def get_ip_field_locator(interface_id: str | None = None, index: int | None = None):
-                if interface_id is not None:
-                    return Locator(f"#config_host_ip_{interface_id}")
-                assert index is not None, "Either interface_id or index must be provided"
-                return Locator(f"#config_host_interface_{index} input[id^='config_host_ip_']")
-
-            @staticmethod
-            def get_mask_field_locator(interface_id: str | None = None, index: int | None = None):
-                if interface_id is not None:
-                    return Locator(f"#config_host_mask_{interface_id}")
-                assert index is not None, "Either interface_id or index must be provided"
-                return Locator(f"#config_host_interface_{index} input[id^='config_host_mask_']")
+            def get_mask_field_xpath(id: int = 0):
+                """XPATH for specific subnet mask from config panel.
+                Args:
+                    id (int): Position of link in links list. Starts from 0."""
+                assert id >= 0, "Subnet mask field can't have index less than 0."
+                return f"/html/body/main/section/div[2]/div[2]/div[2]/form/div[{4 + id * 2}]/input[2]"
 
             MODAL_ERROR_DIALOG = Locator("#config_content > div")
 
