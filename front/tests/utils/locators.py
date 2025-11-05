@@ -48,7 +48,7 @@ class Location:
             Args:
                 id (int): Position of network in networks list. Starts from 0."""
             assert id >= 0, "Network button can't have index less than 0."
-            return f"/html/body/section/div/div/div[{id + 2}]"
+            return f"/html/body/section/div/div/div[{id+2}]"
 
     class Network:
         """Specific network page."""
@@ -143,7 +143,7 @@ class Location:
                         Args:
                             id (int): Position of row in VLAN table. Starts from 0."""
                         assert id >= 0, "Row can't have index less than 0."
-                        return f'//*[@id="config_table_vlan_{switch_name}"]/table/tbody/tr[{id + 1}]'
+                        return f'//*[@id="config_table_vlan_{switch_name}"]/table/tbody/tr[{id+1}]'
 
             class Host(CommonDevice):
                 MAIN_FORM = Locator("#config_main_form")
