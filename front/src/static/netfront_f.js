@@ -10,117 +10,126 @@ let filterState = {
     hideSTP: false,
 };
 
-const uid = function () {
+const uid = function(){
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
-};
+}
 
-const HostUid = function () {
+const HostUid = function(){
+
     let host_name = "host_";
 
     for (let host_number = 1; host_number < 100; host_number++) {
         host = host_name + host_number;
 
-        t = nodes.find((t) => t.data.id === host);
+        t = nodes.find(t => t.data.id === host);
 
-        if (!t) {
+        if (!t)
+        {
             return host;
         }
     }
 
     return "host_" + uid();
-};
+}
 
-const RouterUid = function () {
+const RouterUid = function(){
+
     let host_name = "router_";
 
     for (let host_number = 1; host_number < 100; host_number++) {
         host = host_name + host_number;
 
-        t = nodes.find((t) => t.data.id === host);
+        t = nodes.find(t => t.data.id === host);
 
-        if (!t) {
+        if (!t)
+        {
             return host;
         }
     }
 
     return "router_" + uid();
-};
+}
 
-const ServerUid = function () {
+const ServerUid = function(){
+
     let host_name = "server_";
 
     for (let host_number = 1; host_number < 100; host_number++) {
         host = host_name + host_number;
 
-        let t = nodes.find((t) => t.data.id === host);
+        let t = nodes.find(t => t.data.id === host);
 
-        if (!t) {
+        if (!t)
+        {
             return host;
         }
     }
 
     return "server_" + uid();
-};
+}
 
 const ActionWithInterface = function (n, i, fun) {
+
     let iface_id = n.interface[i].id;
 
-    if (!iface_id) {
+    if (!iface_id){
         return;
     }
 
     let connect_id = n.interface[i].connect;
 
-    if (!connect_id) {
+    if (!connect_id){
         return;
     }
 
-    let edge = edges.find((e) => e.data.id === connect_id);
+    let edge = edges.find(e => e.data.id === connect_id);
 
-    if (!edge) {
+    if (!edge){
         return;
     }
 
     let source_host = edge.data.source;
     let target_host = edge.data.target;
 
-    if (!source_host || !target_host) {
+    if (!source_host || !target_host){
         return;
     }
 
     let connected_to = target_host;
-    if (n.data.id === target_host) {
+    if (n.data.id === target_host){
         connected_to = source_host;
     }
 
-    let connected_to_host = nodes.find((n) => n.data.id === connected_to);
+    let connected_to_host = nodes.find(n => n.data.id === connected_to);
     let connected_to_host_label = "Unknown";
 
-    if (connected_to_host) {
+    if (connected_to_host){
         connected_to_host_label = connected_to_host.data.label;
     }
 
     ip_addr = n.interface[i].ip;
 
-    if (!ip_addr) {
-        ip_addr = "";
+    if (!ip_addr){
+        ip_addr = '';
     }
 
     netmask = n.interface[i].netmask;
 
-    if (!netmask) {
-        netmask = "";
+    if (!netmask){
+        netmask = '';
     }
 
     fun(iface_id, ip_addr, netmask, connected_to_host_label);
-};
 
-const ShowHostConfig = function (n, shared = 0) {
+}
+
+const ShowHostConfig = function(n, shared = 0){
+
     let hostname = n.config.label;
     hostname = hostname || n.data.id;
 
     // Create form
-    if (shared) {
+    if (shared){
         SharedConfigHostForm(n.data.id);
     } else {
         ConfigHostForm(n.data.id);
@@ -132,39 +141,41 @@ const ShowHostConfig = function (n, shared = 0) {
     // Add jobs
     let host_jobs = [];
 
-    if (jobs) {
-        host_jobs = jobs.filter((j) => j.host_id === n.data.id);
+    if (jobs){
+        host_jobs = jobs.filter(j => j.host_id === n.data.id);
     }
 
     ConfigHostJob(host_jobs, shared);
 
     // Add interfaces
-    $.each(n.interface, function (i) {
-        ActionWithInterface(n, i, ConfigHostInterface);
+    $.each(n.interface, function(i) {
+        ActionWithInterface(n, i, ConfigHostInterface)
     });
 
-    if (n.interface.length) {
-        let default_gw = "";
+    if(n.interface.length)
+    {
+        let default_gw = '';
 
-        if ("default_gw" in n.config) {
+        if ("default_gw" in n.config){
             default_gw = n.config.default_gw;
         }
 
         ConfigHostGateway(default_gw);
     }
 
-    if (shared) {
+    if (shared){
         DisableFormInputs();
     }
-};
+}
 
-const ShowRouterConfig = function (n, shared = 0) {
+const ShowRouterConfig = function(n, shared = 0){
+
     let hostname = n.config.label;
     hostname = hostname || n.data.id;
 
     // Create form
-    if (shared) {
-        SharedConfigRouterForm(n.data.id);
+    if (shared){
+        SharedConfigRouterForm(n.data.id)
     } else {
         ConfigRouterForm(n.data.id);
     }
@@ -175,21 +186,22 @@ const ShowRouterConfig = function (n, shared = 0) {
     // Add jobs
     let router_jobs = [];
 
-    if (jobs) {
-        router_jobs = jobs.filter((j) => j.host_id === n.data.id);
+    if (jobs){
+        router_jobs = jobs.filter(j => j.host_id === n.data.id);
     }
 
     ConfigRouterJob(router_jobs, shared);
 
     // Add interfaces
     $.each(n.interface, function (i) {
-        ActionWithInterface(n, i, ConfigRouterInterface);
+        ActionWithInterface(n, i, ConfigRouterInterface)
     });
 
-    if (n.interface.length) {
-        let default_gw = "";
+    if(n.interface.length)
+    {
+        let default_gw = '';
 
-        if ("default_gw" in n.config) {
+        if ("default_gw" in n.config){
             default_gw = n.config.default_gw;
         }
 
@@ -198,18 +210,19 @@ const ShowRouterConfig = function (n, shared = 0) {
 
     ConfigVxlan(n);
 
-    if (shared) {
+    if (shared){
         DisableFormInputs();
         DisableVXLANInputs(n);
     }
-};
+}
 
-const ShowServerConfig = function (n, shared = 0) {
+const ShowServerConfig = function(n, shared = 0){
+
     let hostname = n.config.label;
     hostname = hostname || n.data.id;
 
     // Create form
-    if (shared) {
+    if (shared){
         SharedConfigServerForm(n.data.id);
     } else {
         ConfigServerForm(n.data.id);
@@ -221,38 +234,40 @@ const ShowServerConfig = function (n, shared = 0) {
     // Add jobs
     let host_jobs = [];
 
-    if (jobs) {
-        host_jobs = jobs.filter((j) => j.host_id === n.data.id);
+    if (jobs){
+        host_jobs = jobs.filter(j => j.host_id === n.data.id);
     }
 
     ConfigServerJob(host_jobs, shared);
 
     // Add interfaces
     $.each(n.interface, function (i) {
-        ActionWithInterface(n, i, ConfigServerInterface);
+        ActionWithInterface(n, i, ConfigServerInterface)
     });
 
-    if (n.interface.length) {
-        let default_gw = "";
+    if(n.interface.length)
+    {
+        let default_gw = '';
 
-        if ("default_gw" in n.config) {
+        if ("default_gw" in n.config){
             default_gw = n.config.default_gw;
         }
 
         ConfigServerGateway(default_gw);
     }
 
-    if (shared) {
+    if (shared){
         DisableFormInputs();
     }
-};
+}
 
-const ShowHubConfig = function (n, shared = 0) {
+const ShowHubConfig = function(n, shared = 0){
+
     let hostname = n.config.label;
     hostname = hostname || n.data.id;
 
     // Create form
-    if (shared) {
+    if (shared){
         SharedConfigHubForm(n.data.id);
     } else {
         ConfigHubForm(n.data.id);
@@ -263,24 +278,25 @@ const ShowHubConfig = function (n, shared = 0) {
 
     // Add interfaces
     $.each(n.interface, function (i) {
-        ActionWithInterface(n, i, ConfigHubInterface);
+        ActionWithInterface(n, i, ConfigHubInterface)
     });
 
-    if (n.interface.length) {
+    if(n.interface.length){
         ConfigHubIndent();
     }
 
-    if (shared) {
+    if (shared){
         DisableFormInputs();
     }
-};
+}
 
-const ShowSwitchConfig = function (n, shared = 0) {
+const ShowSwitchConfig = function(n, shared = 0){
+
     let hostname = n.config.label;
     hostname = hostname || n.data.id;
 
     // Create form
-    if (shared) {
+    if (shared){
         SharedConfigSwitchForm(n.data.id);
     } else {
         ConfigSwitchForm(n.data.id);
@@ -290,10 +306,10 @@ const ShowSwitchConfig = function (n, shared = 0) {
     ConfigSwitchName(hostname);
 
     //Add checkbox STP
-    //    ConfigSwtichSTP(n.config.stp);
+//    ConfigSwtichSTP(n.config.stp);
 
     //Add checkbox RSTP
-    //    ConfigSwtichRSTP(n.config.rstp);
+//    ConfigSwtichRSTP(n.config.rstp);
     ConfigRSTP(n);
 
     // Add VLAN
@@ -301,272 +317,277 @@ const ShowSwitchConfig = function (n, shared = 0) {
 
     // Add interfaces
     $.each(n.interface, function (i) {
-        ActionWithInterface(n, i, ConfigSwitchInterface);
+        ActionWithInterface(n, i, ConfigSwitchInterface)
     });
 
-    if (n.interface.length) {
+    if(n.interface.length){
         ConfigSwitchIndent();
     }
 
-    if (shared) {
+    if (shared){
         DisableFormInputs();
         DisableVLANInputs(n);
     }
-};
+}
 
-const ShowEdgeConfig = function (edge_id, shared = 0) {
-    let ed = edges.find((ed) => ed.data.id === edge_id);
+const ShowEdgeConfig = function(edge_id, shared = 0){
 
-    if (!ed) {
+    let ed = edges.find(ed => ed.data.id === edge_id);
+
+    if (!ed){
         return;
     }
 
     let edge_source = ed.data.source;
     let edge_target = ed.data.target;
-    let edge_loss = ed.data.loss_percentage || 0;
+    let edge_loss = ed.data.loss_percentage || 0
 
     // Create form
-    if (shared) {
+    if (shared){
         SharedConfigEdgeForm(edge_id);
     } else {
         ConfigEdgeForm(edge_id);
     }
 
+
     // Add loss percentage info
-    ConfigEdgePercentage(edge_loss);
+    ConfigEdgePercentage(edge_loss)
 
     // Add source and target info
     ConfigEdgeEndpoints(edge_source, edge_target);
 
-    if (shared) {
+    if (shared){
         DisableFormInputs();
     }
-};
+}
 
-const PacketUid = function () {
+const PacketUid = function(){
     return "pkt_" + uid();
-};
+}
 
-const l1HubUid = function () {
+const l1HubUid = function(){
+
     let hub_name = "l1hub";
 
     for (let hub_number = 1; hub_number < 100; hub_number++) {
         hub = hub_name + hub_number;
 
-        t = nodes.find((t) => t.data.id === hub);
+        t = nodes.find(t => t.data.id === hub);
 
-        if (!t) {
+        if (!t)
+        {
             return hub;
         }
     }
 
     return "hub_" + uid();
-};
+}
 
-const l2SwitchUid = function () {
+const l2SwitchUid = function(){
+
     let sw_name = "l2sw";
 
     for (let sw_number = 1; sw_number < 100; sw_number++) {
         sw = sw_name + sw_number;
 
-        t = nodes.find((t) => t.data.id === sw);
+        t = nodes.find(t => t.data.id === sw);
 
-        if (!t) {
+        if (!t)
+        {
             return sw;
         }
     }
 
     return "sw_" + uid();
-};
+}
 
-const l2SwitchPortUid = function (switch_id) {
-    let t = nodes.find((t) => t.data.id === switch_id);
+const l2SwitchPortUid = function(switch_id){
 
-    if (!t) {
+    let t = nodes.find(t => t.data.id === switch_id);
+
+    if (!t)
+    {
         return -1;
     }
 
     for (let port_number = 1; port_number < 128; port_number++) {
         port = t.data.id + "_" + port_number;
 
-        let i = t.interface.find((i) => i.id === port);
+        let i = t.interface.find(i => i.id === port);
 
-        if (!i) {
+        if (!i){
             return port;
         }
     }
-};
+}
 
-const l1HubPortUid = function (hub_id) {
-    let t = nodes.find((t) => t.data.id === hub_id);
+const l1HubPortUid = function(hub_id){
 
-    if (!t) {
+    let t = nodes.find(t => t.data.id === hub_id);
+
+    if (!t)
+    {
         return -1;
     }
 
     for (let port_number = 1; port_number < 128; port_number++) {
         port = t.data.id + "_" + port_number;
 
-        let i = t.interface.find((i) => i.id === port);
+        let i = t.interface.find(i => i.id === port);
 
-        if (!i) {
+        if (!i){
             return port;
         }
     }
-};
+}
 
-const EdgeUid = function () {
+const EdgeUid = function(){
     return "edge_" + uid();
-};
+}
 
-const InterfaceUid = function () {
+const InterfaceUid = function(){
     return "iface_" + Math.random().toString(9).substring(2, 10);
-};
+}
 
-const PostNodesEdges = function () {
+const PostNodesEdges = function(){
     $.ajax({
-        type: "POST",
-        url: "/post_nodes_edges?guid=" + network_guid,
+        type: 'POST',
+        url: '/post_nodes_edges?guid=' + network_guid,
         data: JSON.stringify([nodes, edges]),
-        success: function (data) { },
-        error: function (err) {
-            console.log("Cannot post edges to server");
-        },
+        success: function(data) {},
+        error: function(err) {console.log('Cannot post edges to server')},
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
-const AddEdge = function (source_id, target_id) {
-    let source_node = nodes.find((n) => n.data.id === source_id);
-    let target_node = nodes.find((n) => n.data.id === target_id);
+const AddEdge = function(source_id, target_id){
 
-    // Do we find nodes?
-    if (!source_node || !target_node) {
-        return;
-    }
+        let source_node = nodes.find(n => n.data.id === source_id);
+        let target_node = nodes.find(n => n.data.id === target_id);
 
-    // Save the network state.
-    SaveNetworkObject();
-
-    // Add edge
-    let edge_id = EdgeUid();
-
-    edges.push({
-        data: {
-            id: edge_id,
-            source: source_node.data.id,
-            target: target_node.data.id,
-        },
-    });
-
-    // Add interface If edge connects to host or to router or to server
-    if (
-        source_node.config.type === "host" ||
-        source_node.config.type === "router" ||
-        source_node.config.type === "server"
-    ) {
-        let iface_id = InterfaceUid();
-        source_node.interface.push({
-            id: iface_id,
-            name: iface_id,
-            connect: edge_id,
-        });
-    }
-
-    if (
-        target_node.config.type === "host" ||
-        target_node.config.type === "router" ||
-        target_node.config.type === "server"
-    ) {
-        let iface_id = InterfaceUid();
-        target_node.interface.push({
-            id: iface_id,
-            name: iface_id,
-            connect: edge_id,
-        });
-    }
-
-    // Add interface if connected to switch
-    if (target_node.config.type === "l2_switch") {
-        var vlan = null;
-        var type_connection = null;
-
-        if (areInterfaceFieldsFilled(target_node)) {
-            vlan = 1;
-            type_connection = 0;
-        }
-
-        let iface_id = l2SwitchPortUid(target_node.data.id);
-        target_node.interface.push({
-            id: iface_id,
-            name: iface_id,
-            connect: edge_id,
-            vlan: vlan,
-            type_connection: type_connection,
-        });
-    }
-
-    if (source_node.config.type === "l2_switch") {
-        var vlan = null;
-        var type_connection = null;
-
-        if (areInterfaceFieldsFilled(source_node)) {
-            vlan = 1;
-            type_connection = 0;
-        }
-
-        let iface_id = l2SwitchPortUid(source_node.data.id);
-        source_node.interface.push({
-            id: iface_id,
-            name: iface_id,
-            connect: edge_id,
-            vlan: vlan,
-            type_connection: type_connection,
-        });
-    }
-
-    // Add interface if connected to Hub
-    if (target_node.config.type === "l1_hub") {
-        let iface_id = l1HubPortUid(target_node.data.id);
-        target_node.interface.push({
-            id: iface_id,
-            name: iface_id,
-            connect: edge_id,
-        });
-    }
-
-    if (source_node.config.type === "l1_hub") {
-        let iface_id = l1HubPortUid(source_node.data.id);
-        source_node.interface.push({
-            id: iface_id,
-            name: iface_id,
-            connect: edge_id,
-        });
-    }
-};
-
-const DeleteJob = function (node_id) {
-    let jobs_to_delete = [];
-
-    $.each(jobs, function (idx, job) {
-        if (!job) {
+        // Do we find nodes?
+        if (!source_node || !target_node)
+        {
             return;
         }
 
-        if (job.host_id === node_id) {
+        // Save the network state.
+        SaveNetworkObject();
+
+        // Add edge
+        let edge_id = EdgeUid();
+
+        edges.push({
+            data: {
+                id: edge_id,
+                source: source_node.data.id,
+                target: target_node.data.id,
+            }
+        });
+
+        // Add interface If edge connects to host or to router or to server
+        if (source_node.config.type === 'host' || source_node.config.type === 'router' || source_node.config.type === 'server'){
+            let iface_id = InterfaceUid();
+            source_node.interface.push({
+                  id: iface_id,
+                  name: iface_id,
+                  connect: edge_id,
+            });
+        }
+
+        if (target_node.config.type === 'host' || target_node.config.type === 'router' || target_node.config.type === 'server'){
+            let iface_id = InterfaceUid();
+            target_node.interface.push({
+                id: iface_id,
+                name: iface_id,
+                connect: edge_id,
+            });
+        }
+
+        // Add interface if connected to switch
+        if (target_node.config.type === 'l2_switch'){
+            var vlan = null;
+            var type_connection = null;
+
+            if (areInterfaceFieldsFilled(target_node)) {
+                vlan = 1;
+                type_connection = 0;
+            }
+
+            let iface_id = l2SwitchPortUid(target_node.data.id);
+            target_node.interface.push({
+                id: iface_id,
+                name: iface_id,
+                connect: edge_id,
+                vlan: vlan,
+                type_connection: type_connection,
+            });
+        }
+
+        if (source_node.config.type === 'l2_switch'){
+            var vlan = null;
+            var type_connection = null;
+
+            if (areInterfaceFieldsFilled(source_node)) {
+                vlan = 1;
+                type_connection = 0;
+            }
+
+            let iface_id = l2SwitchPortUid(source_node.data.id);
+            source_node.interface.push({
+                id: iface_id,
+                name: iface_id,
+                connect: edge_id,
+                vlan: vlan,
+                type_connection: type_connection,
+            });
+        }
+
+        // Add interface if connected to Hub
+        if (target_node.config.type === 'l1_hub'){
+            let iface_id = l1HubPortUid(target_node.data.id);
+            target_node.interface.push({
+                id: iface_id,
+                name: iface_id,
+                connect: edge_id,
+            });
+        }
+
+        if (source_node.config.type === 'l1_hub'){
+            let iface_id = l1HubPortUid(source_node.data.id);
+            source_node.interface.push({
+                id: iface_id,
+                name: iface_id,
+                connect: edge_id,
+            });
+        }
+}
+
+const DeleteJob = function(node_id){
+
+    let jobs_to_delete = [];
+
+    $.each(jobs , function(idx, job) {
+
+        if (!job){
+            return;
+        }
+
+        if (job.host_id === node_id){
             jobs_to_delete.push(idx);
         }
     });
 
-    $.each(jobs_to_delete, function (idx, val) {
+    $.each(jobs_to_delete, function (idx, val){
         jobs.splice(val, 1);
     });
-};
+}
 
-const DeleteNode = function (node_id) {
+const DeleteNode = function(node_id) {
+
     // Find node in nodes
-    let n = nodes.find((n) => n.data.id === node_id);
+    let n = nodes.find(n => n.data.id === node_id);
 
     if (!n) {
         return;
@@ -575,23 +596,25 @@ const DeleteNode = function (node_id) {
     let edges_to_delete = [];
 
     // Find all edges that connected to the deleted node
-    $.each(edges, function (idx, edge) {
-        if (!edge) {
+    $.each(edges , function(idx, edge) {
+
+        if (!edge){
             return;
         }
 
         // Find the edge
-        if (edge.data.source === node_id) {
+        if (edge.data.source === node_id)
+        {
             // Find the node on the other side
-            let t = nodes.find((t) => t.data.id === edge.data.target);
+            let t = nodes.find(t => t.data.id === edge.data.target);
 
-            if (!t) {
+            if (!t){
                 console.log("We have an edge without target node");
                 return;
             }
 
             // Iterate interface and delete one
-            let new_iface = t.interface.filter(function (iface) {
+            let new_iface = t.interface.filter(function( iface ) {
                 return iface.connect !== edge.data.id;
             });
 
@@ -600,17 +623,18 @@ const DeleteNode = function (node_id) {
             return;
         }
 
-        if (edge.data.target === node_id) {
+        if (edge.data.target === node_id)
+        {
             // Find the node on the other side
-            let t = nodes.find((t) => t.data.id === edge.data.source);
+            let t = nodes.find(t => t.data.id === edge.data.source);
 
-            if (!t) {
+            if (!t){
                 console.log("We have an edge without target node");
                 return;
             }
 
             // Iterate interface and delete one
-            let new_iface = t.interface.filter(function (iface) {
+            let new_iface = t.interface.filter(function( iface ) {
                 return iface.connect !== edge.data.id;
             });
 
@@ -618,37 +642,39 @@ const DeleteNode = function (node_id) {
             edges_to_delete.unshift(idx);
             return;
         }
+
     });
 
-    $.each(edges_to_delete, function (idx, val) {
+    $.each(edges_to_delete, function (idx, val){
         edges.splice(val, 1);
     });
 
     // Delete the node
-    let node_index = nodes.findIndex((prop) => prop.data.id === node_id);
-    nodes.splice(node_index, 1);
-};
+    let node_index = nodes.findIndex(prop => prop.data.id === node_id);
+    nodes.splice(node_index,1);
+}
 
 const DeleteEdge = function (edge_id) {
-    let ed = edges.find((ed) => ed.data.id === edge_id);
 
-    if (!ed) {
+    let ed = edges.find(ed => ed.data.id === edge_id);
+
+    if (!ed){
         return;
     }
 
     let connected_nodes = [ed.data.source, ed.data.target];
     let iterator = connected_nodes.values();
 
-    for (let node_id of iterator) {
-        let t = nodes.find((t) => t.data.id === node_id);
+    for (let node_id of iterator){
+        let t = nodes.find(t => t.data.id === node_id);
 
-        if (!t) {
+        if (!t){
             console.log("We have an edge without target node");
             continue;
         }
 
         // Iterate interface and delete one
-        let edge_node_iface = t.interface.filter(function (iface) {
+        let edge_node_iface = t.interface.filter(function( iface ) {
             return iface.connect !== edge_id;
         });
 
@@ -656,217 +682,223 @@ const DeleteEdge = function (edge_id) {
     }
 
     // Delete the edeg
-    let edge_index = edges.findIndex((prop) => prop.data.id === edge_id);
-    edges.splice(edge_index, 1);
+    let edge_index = edges.findIndex(prop => prop.data.id === edge_id);
+    edges.splice(edge_index,1);
     return;
-};
+}
 
-const PostNodes = function () {
+const PostNodes = function(){
     $.ajax({
-        type: "POST",
-        url: "/post_network_nodes?guid=" + network_guid,
+        type: 'POST',
+        url: '/post_network_nodes?guid=' + network_guid,
         data: JSON.stringify(nodes),
-        success: function (data) { },
-        error: function (err) {
-            console.log("Cannot post nodes to server");
-        },
+        success: function(data) {},
+        error: function(err) {console.log('Cannot post nodes to server')},
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
-const MoveNodes = function () {
+const MoveNodes = function(){
+
     $.ajax({
-        type: "POST",
-        url: "/move_network_nodes?guid=" + network_guid,
+        type: 'POST',
+        url: '/move_network_nodes?guid=' + network_guid,
         data: JSON.stringify(nodes),
-        success: function (data) { },
-        error: function (err) {
-            console.log("Cannot post nodes to server");
-        },
+        success: function(data) {},
+        error: function(err) {console.log('Cannot post nodes to server')},
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
-const prepareStylesheet = function () {
-    const getColor = function (ele) {
+const prepareStylesheet = function() {
+    const getColor = function(ele) {
         if (ele.group() === "edges") {
-            const loss = ele.data("loss_percentage") || 0;
-            if (loss > 0) return "#FF8C00";
+            const loss = ele.data('loss_percentage') || 0;
+            if (loss > 0)
+                return '#FF8C00';
         }
-        return ele.data("color") || "#9FBFE5";
+        return ele.data('color') || '#9FBFE5';
     };
-    const getEdgeLabel = function (ele) {
-        return ele.data("label") || "";
+    const getEdgeLabel = function(ele) {
+      return ele.data('label') || '';
     };
-    const getLineStyle = function (ele) {
-        return ele.data("line") || "solid";
+    const getLineStyle = function(ele) {
+      return ele.data('line') || 'solid';
     };
-    const getCurveStyle = function (ele) {
-        return ele.data("style") || "bezier";
+    const getCurveStyle = function(ele) {
+      return ele.data('style') || 'bezier';
     };
-    const getTextDirection = function (ele) {
-        return ele.data("direction") || "autorotate";
+    const getTextDirection = function(ele) {
+      return ele.data('direction') || 'autorotate';
     };
 
-    const getNodeLabel = function (ele) {
-        let label = ele.data("label") || "";
-        let n = nodes.find((n) => n.data.id === ele.data("id"));
+    const getNodeLabel = function(ele) {
 
-        if (!n) {
+        let label = ele.data('label') || '';
+        let n = nodes.find(n => n.data.id === ele.data('id'));
+
+        if (!n){
             return label;
         }
 
         $.each(n.interface, function (i) {
+
             let ip_addr = n.interface[i].ip;
             let netmask = n.interface[i].netmask;
 
-            if (!ip_addr || !netmask) {
+            if (!ip_addr || !netmask){
                 return;
             }
 
-            label = label + "\n" + ip_addr + "/" + netmask;
-        });
+            label = label + '\n' + ip_addr + "/" + netmask;
+        }
+        );
 
-        if (n.config.default_gw) {
-            label = label + "\n" + "gw:" + n.config.default_gw;
+        if (n.config.default_gw)
+        {
+            label = label + '\n' + 'gw:' + n.config.default_gw;
         }
 
         $.each(jobs, function (i) {
             let j = jobs[i];
 
-            if (j.host_id === n.data.id) {
-                label = label + "\n" + "(" + j.print_cmd + ")";
+            if (j.host_id === n.data.id){
+                label = label + '\n' + '(' + j.print_cmd + ')';
             }
+
         });
 
         return label;
     };
 
-    let sheet = cytoscape
-        .stylesheet()
-        .selector("node")
+    let sheet = cytoscape.stylesheet()
+        .selector('node')
         .css({
-            height: 30,
-            width: 30,
-            "background-fit": "cover",
-            "border-color": "#000",
-            "border-width": 0,
-            content: getNodeLabel,
-            "text-valign": "top",
-            "text-align": "center",
-            "font-size": "8px",
-            "text-wrap": "wrap",
+          'height': 30,
+          'width': 30,
+          'background-fit': 'cover',
+          'border-color': '#000',
+          'border-width': 0,
+          'content': getNodeLabel,
+          'text-valign': 'top',
+          'text-align': 'center',
+          'font-size': '8px',
+          'text-wrap': 'wrap'
         })
-        .selector("edge")
+        .selector('edge')
         .css({
-            width: 2,
-            "target-arrow-shape": "none",
-            "line-color": getColor,
-            "target-arrow-color": getColor,
-            "curve-style": getCurveStyle,
-            label: getEdgeLabel,
-            "line-style": getLineStyle,
-            color: "#000",
-            "text-outline-color": "#FFF",
-            "text-outline-width": 1,
-            "edge-text-rotation": getTextDirection,
+          'width': 2,
+          'target-arrow-shape': 'none',
+          'line-color': getColor,
+          'target-arrow-color': getColor,
+          'curve-style': getCurveStyle,
+          'label': getEdgeLabel,
+          'line-style': getLineStyle,
+          'color': '#000',
+          'text-outline-color': '#FFF',
+          'text-outline-width': 1,
+          'edge-text-rotation': getTextDirection,
         })
-        .selector(".eh-handle")
+        .selector('.eh-handle')
         .css({
-            "background-color": "blue",
-            width: 8,
-            height: 8,
-            shape: "ellipse",
-            "overlay-opacity": 0,
-            "border-width": 4, // makes the handle easier to hit
-            "border-opacity": 0,
-        })
-
-        .selector(".eh-hover")
-        .css({
-            "background-color": "blue",
+            'background-color': 'blue',
+            'width': 8,
+            'height': 8,
+            'shape': 'ellipse',
+            'overlay-opacity': 0,
+            'border-width': 4, // makes the handle easier to hit
+            'border-opacity': 0
         })
 
-        .selector(".eh-source")
+        .selector('.eh-hover')
         .css({
-            "border-width": 2,
-            "border-color": "blue",
+            'background-color': 'blue'
         })
 
-        .selector(".eh-target")
+        .selector('.eh-source')
         .css({
-            "border-width": 2,
-            "border-color": "blue",
+            'border-width': 2,
+            'border-color': 'blue'
         })
 
-        .selector(".eh-preview")
+        .selector('.eh-target')
         .css({
-            "background-color": "blue",
-            "line-color": "blue",
-            "target-arrow-color": "blue",
-            "source-arrow-color": "blue",
+            'border-width': 2,
+            'border-color': 'blue'
         })
 
-        .selector(".eh-ghost-edge")
+        .selector('.eh-preview')
         .css({
-            "background-color": "blue",
-            "line-color": "blue",
-            "target-arrow-color": "blue",
-            "source-arrow-color": "blue",
+            'background-color': 'blue',
+            'line-color': 'blue',
+            'target-arrow-color': 'blue',
+            'source-arrow-color': 'blue'
         })
 
-        .selector("node[name]")
+        .selector('.eh-ghost-edge')
         .css({
-            content: "data(name)",
+            'background-color': 'blue',
+            'line-color': 'blue',
+            'target-arrow-color': 'blue',
+            'source-arrow-color': 'blue'
+        })
+
+        .selector('node[name]')
+        .css({
+            'content': 'data(name)'
         })
 
         .selector('node[type="packet"]')
         .css({
-            content: "data(label)",
-            "text-valign": "top",
-            "text-align": "center",
-            height: "5px",
-            width: "5px",
-            "border-opacity": "0",
-            "border-width": "0px",
-            "text-wrap": "wrap",
+            'content': 'data(label)',
+            'text-valign': 'top',
+            'text-align': 'center',
+            'height': '5px',
+            'width': '5px',
+            'border-opacity': '0',
+            'border-width': '0px',
+            'text-wrap': 'wrap'
         })
 
-        .selector(".hidden")
+        .selector('.hidden')
         .css({
-            display: "none",
+            'display': 'none'
         })
 
-        .selector(".eh-ghost-edge.eh-preview-active")
+        .selector('.eh-ghost-edge.eh-preview-active')
         .css({
-            opacity: 0,
+            'opacity': 0
         });
 
-    const appendIconClass = function (stylesheet, cssClass) {
-        return stylesheet.selector("." + cssClass).css({
-            "background-image": DiagramIcons[cssClass],
-            "background-opacity": 0,
-            "border-width": 0,
-            "background-clip": "none",
-        });
+    const appendIconClass = function(stylesheet, cssClass) {
+      return stylesheet.selector('.' + cssClass)
+          .css({
+            'background-image': DiagramIcons[cssClass],
+            'background-opacity': 0,
+            'border-width': 0,
+            'background-clip': 'none',
+          });
     };
 
     for (const prop in DiagramIcons) {
-        if (Object.prototype.hasOwnProperty.call(DiagramIcons, prop)) {
-            sheet = appendIconClass(sheet, prop);
-        }
+
+      if (Object.prototype.hasOwnProperty.call(DiagramIcons, prop)) {
+        sheet = appendIconClass(sheet, prop);
+      }
     }
 
     return sheet;
-};
+  };
 
-const DrawGraph = function () {
+const DrawGraph = function() {
+
     // Do we already have one?
     let cy = undefined;
 
-    if (global_cy) {
+    if (global_cy)
+    {
         cy = global_cy;
 
         var collection = cy.elements();
@@ -885,7 +917,7 @@ const DrawGraph = function () {
         autounselectify: true,
         style: prepareStylesheet(),
         elements: [],
-        layout: "preset",
+        layout: 'preset',
         zoom: network_zoom,
         pan: { x: network_pan_x, y: network_pan_y },
         fit: true,
@@ -895,12 +927,14 @@ const DrawGraph = function () {
 
     // the default values of each option are outlined below:
     let defaults = {
-        canConnect: function (sourceNode, targetNode) {
+        canConnect: function( sourceNode, targetNode ){
+
             // whether an edge can be created between source and target
-            return !sourceNode.same(targetNode); // e.g. disallow loops
+        return !sourceNode.same(targetNode); // e.g. disallow loops
         },
 
-        edgeParams: function (sourceNode, targetNode) {
+        edgeParams: function( sourceNode, targetNode ){
+
             // for edges between the specified source and target
             // return element object to be passed to cy.add() for edge
             return {};
@@ -911,7 +945,7 @@ const DrawGraph = function () {
         snapThreshold: 50, // the target node must be less than or equal to this many pixels away from the cursor/finger
         snapFrequency: 15, // the number of times per second (Hz) that snap checks done (lower is less expensive)
         noEdgeEventsInDraw: true, // set events:no to edges during draws, prevents mouseouts on compounds
-        disableBrowserGestures: true, // during an edge drawing gesture, disable browser gestures such as two-finger trackpad swipe and pinch-to-zoom
+        disableBrowserGestures: true // during an edge drawing gesture, disable browser gestures such as two-finger trackpad swipe and pinch-to-zoom
     };
 
     global_eh = cy.edgehandles(defaults);
@@ -923,8 +957,9 @@ const DrawGraph = function () {
     cy.add(edges);
 
     // Changing zoom
-    cy.on("zoom", function (evt) {
-        if (NetworkUpdateTimeoutId >= 0) {
+    cy.on('zoom', function(evt){
+
+        if (NetworkUpdateTimeoutId >= 0){
             clearTimeout(NetworkUpdateTimeoutId);
             NetworkUpdateTimeoutId = -1;
         }
@@ -933,8 +968,9 @@ const DrawGraph = function () {
     });
 
     // Changing the pan
-    cy.on("pan", function (evt) {
-        if (NetworkUpdateTimeoutId >= 0) {
+    cy.on('pan', function(evt){
+
+        if (NetworkUpdateTimeoutId >= 0){
             clearTimeout(NetworkUpdateTimeoutId);
             NetworkUpdateTimeoutId = -1;
         }
@@ -943,9 +979,10 @@ const DrawGraph = function () {
     });
 
     // Looking for a position changing
-    cy.on("dragfree", "node", function (evt) {
+    cy.on('dragfree', 'node', function(evt){
+
         //let node_id = evt.target.id();
-        let n = nodes.find((n) => n.data.id === this.id());
+        let n = nodes.find(n => n.data.id === this.id());
 
         if (!n) {
             return;
@@ -959,19 +996,20 @@ const DrawGraph = function () {
     });
 
     // Click on object
-    cy.on("click", function (evt) {
+    cy.on('click', function (evt) {
+
         let evtTarget = evt.target;
 
         // Is this cy ?
         if (evtTarget === cy) {
-            ClearConfigForm("");
+            ClearConfigForm('');
             selecteed_node_id = 0;
             selected_edge_id = 0;
             return;
         }
 
         // Is this edge ?
-        if (evtTarget.group() === "edges") {
+        if (evtTarget.group() === 'edges'){
             selected_edge_id = evtTarget.data().id;
             ShowEdgeConfig(selected_edge_id);
             selecteed_node_id = 0;
@@ -980,7 +1018,7 @@ const DrawGraph = function () {
 
         // Maybe host ?
         var target_id = evt.target.id();
-        let n = nodes.find((n) => n.data.id === target_id);
+        let n = nodes.find(n => n.data.id === target_id);
 
         if (!n) {
             return;
@@ -989,21 +1027,21 @@ const DrawGraph = function () {
         selecteed_node_id = n.data.id;
         selected_edge_id = 0;
 
-        if (n.config.type === "host") {
+        if (n.config.type === 'host'){
             ShowHostConfig(n);
-        } else if (n.config.type === "l1_hub") {
+        } else if (n.config.type === 'l1_hub'){
             ShowHubConfig(n);
-        } else if (n.config.type === "l2_switch") {
+        } else if (n.config.type === 'l2_switch'){
             ShowSwitchConfig(n);
-        } else if (n.config.type === "router") {
+        } else if (n.config.type === 'router'){
             ShowRouterConfig(n);
-        } else if (n.config.type === "server") {
+        } else if (n.config.type === 'server'){
             ShowServerConfig(n);
         }
     });
 
     // Add edge to the edges[] and then save it to the server.
-    cy.on("ehcomplete", (event, sourceNode, targetNode, addedEdge) => {
+    cy.on('ehcomplete', (event, sourceNode, targetNode, addedEdge) => {
         AddEdge(sourceNode._private.data.id, targetNode._private.data.id);
         PostNodesEdges();
         TakeGraphPictureAndUpdate();
@@ -1011,19 +1049,21 @@ const DrawGraph = function () {
         SetNetworkPlayerState(-1);
     });
 
-    $(document).on("keyup", function (e) {
+    $(document).on('keyup', function(e){
+
         if (e.keyCode == 46 && selecteed_node_id) {
+
             // Save the network state.
             SaveNetworkObject();
-
+                        
             DeleteNode(selecteed_node_id);
             DeleteJob(selecteed_node_id);
 
-            ClearConfigForm("");
+            ClearConfigForm('');
             selecteed_node_id = 0;
             selected_edge_id = 0;
 
-            PostNodesEdges(); // Update network on server
+            PostNodesEdges();               // Update network on server
             cy.elements().remove();
             cy.add(nodes);
             cy.add(edges);
@@ -1033,17 +1073,18 @@ const DrawGraph = function () {
             // Reset network state
             SetNetworkPlayerState(-1);
         }
-        if (e.keyCode == 46 && selected_edge_id) {
+        if (e.keyCode ==  46 && selected_edge_id) {
+
             // Save the network state.
             SaveNetworkObject();
 
             DeleteEdge(selected_edge_id);
 
-            ClearConfigForm("");
+            ClearConfigForm('');
             selecteed_node_id = 0;
             selected_edge_id = 0;
 
-            PostNodesEdges(); // Update network on server
+            PostNodesEdges();               // Update network on server
             cy.elements().remove();
             cy.add(nodes);
             cy.add(edges);
@@ -1054,14 +1095,15 @@ const DrawGraph = function () {
             SetNetworkPlayerState(-1);
         }
 
-        if (e.keyCode == 90 && e.ctrlKey) {
-            ClearConfigForm("");
+        if (e.keyCode == 90 && e.ctrlKey){
+
+            ClearConfigForm('');
             selecteed_node_id = 0;
             selected_edge_id = 0;
 
             RestoreNetworkObject();
 
-            PostNodesEdges(); // Update network on server
+            PostNodesEdges();               // Update network on server
             cy.elements().remove();
             cy.add(nodes);
             cy.add(edges);
@@ -1071,20 +1113,23 @@ const DrawGraph = function () {
             // Reset network state
             SetNetworkPlayerState(-1);
         }
-    });
-};
 
-const DrawGraphStatic = function (nodes, edges, shared = 0) {
+    });
+}
+
+const DrawGraphStatic = function(nodes, edges, shared=0) {
+
     // Do we already have one?
     let cy = undefined;
 
     let network_scheme_id = "network_scheme";
 
-    if (shared) {
+    if (shared){
         network_scheme_id = "network_scheme_shared";
     }
 
-    if (global_cy) {
+    if (global_cy)
+    {
         cy = global_cy;
         cy.elements().remove();
     } else {
@@ -1094,17 +1139,17 @@ const DrawGraphStatic = function (nodes, edges, shared = 0) {
             autounselectify: false,
             style: prepareStylesheet(),
             elements: [],
-            layout: "preset",
+            layout: 'preset',
             zoom: network_zoom,
             pan: { x: network_pan_x, y: network_pan_y },
             fit: true,
         });
 
-        global_cy = cy;
+         global_cy = cy;
     }
 
     // Turn off edges creation.
-    if (global_eh) {
+    if (global_eh){
         global_eh.disable();
     }
 
@@ -1113,13 +1158,15 @@ const DrawGraphStatic = function (nodes, edges, shared = 0) {
     cy.add(edges);
     cy.nodes().ungrabify();
     return;
-};
+}
 
-const DrawSharedGraph = function (nodes, edges) {
+const DrawSharedGraph = function(nodes, edges) {
+
     // Do we already have one?
     let cy = undefined;
 
-    if (global_cy) {
+    if (global_cy)
+    {
         cy = global_cy;
         cy.elements().remove();
     } else {
@@ -1129,7 +1176,7 @@ const DrawSharedGraph = function (nodes, edges) {
             autounselectify: true,
             style: prepareStylesheet(),
             elements: [],
-            layout: "preset",
+            layout: 'preset',
             zoom: network_zoom,
             pan: { x: network_pan_x, y: network_pan_y },
             fit: true,
@@ -1147,17 +1194,18 @@ const DrawSharedGraph = function (nodes, edges) {
     cy.add(edges);
 
     // Click on object
-    cy.on("click", function (evt) {
+    cy.on('click', function (evt) {
+
         let evtTarget = evt.target;
         if (evtTarget === cy) {
-            ClearConfigForm("");
+            ClearConfigForm('');
             selecteed_node_id = 0;
             selected_edge_id = 0;
             return;
         }
 
         // Is this edge ?
-        if (evtTarget.group() === "edges") {
+        if (evtTarget.group() === 'edges'){
             selected_edge_id = evtTarget.data().id;
             ShowEdgeConfig(selected_edge_id, 1);
             selecteed_node_id = 0;
@@ -1165,7 +1213,7 @@ const DrawSharedGraph = function (nodes, edges) {
         }
 
         var target_id = evt.target.id();
-        let n = nodes.find((n) => n.data.id === target_id);
+        let n = nodes.find(n => n.data.id === target_id);
 
         if (!n) {
             return;
@@ -1174,39 +1222,35 @@ const DrawSharedGraph = function (nodes, edges) {
         selecteed_node_id = n.data.id;
         selected_edge_id = 0;
 
-        if (n.config.type === "host") {
-            ShowHostConfig(n, (shared = 1));
-        } else if (n.config.type === "l1_hub") {
-            ShowHubConfig(n, (shared = 1));
-        } else if (n.config.type === "l2_switch") {
-            ShowSwitchConfig(n, (shared = 1));
-        } else if (n.config.type === "router") {
-            ShowRouterConfig(n, (shared = 1));
-        } else if (n.config.type === "server") {
-            ShowServerConfig(n, (shared = 1));
+        if (n.config.type === 'host'){
+            ShowHostConfig(n, shared=1);
+        } else if (n.config.type === 'l1_hub'){
+            ShowHubConfig(n, shared=1);
+        } else if (n.config.type === 'l2_switch'){
+            ShowSwitchConfig(n, shared=1);
+        } else if (n.config.type === 'router'){
+            ShowRouterConfig(n, shared=1);
+        } else if (n.config.type === 'server'){
+            ShowServerConfig(n, shared=1);
         }
     });
-};
+}
 
-const DrawIndexGraphStatic = function (
-    nodes,
-    edges,
-    container_id,
-    graph_network_zoom,
-    graph_network_pan_x,
-    graph_network_pan_y
-) {
+const DrawIndexGraphStatic = function(nodes, edges, container_id, graph_network_zoom,
+                                    graph_network_pan_x, graph_network_pan_y)
+{
+
     let index_cy = cytoscape({
         container: document.getElementById(container_id),
         boxSelectionEnabled: true,
         autounselectify: false,
         style: prepareStylesheet(),
         elements: [],
-        layout: "preset",
+        layout: 'preset',
         zoom: graph_network_zoom,
-        pan: { x: graph_network_pan_x, y: graph_network_pan_y },
-        fit: true,
-    });
+            pan: { x: graph_network_pan_x, y: graph_network_pan_y },
+            fit: true,
+        });
 
     index_cy.autounselectify(false);
 
@@ -1216,26 +1260,26 @@ const DrawIndexGraphStatic = function (
 
     index_cy.nodes().ungrabify();
     return index_cy;
-};
+}
 
 // Check whether simulation is over and we can run packets
-const CheckSimulation = function (simulation_id) {
+const CheckSimulation = function (simulation_id)
+{
     $.ajax({
-        type: "GET",
-        url:
-            "/check_simulation?simulation_id=" +
-            simulation_id +
-            "&network_guid=" +
-            network_guid,
-        data: "",
-        success: function (data, textStatus, xhr) {
+        type: 'GET',
+        url: '/check_simulation?simulation_id=' + simulation_id + '&network_guid=' + network_guid,
+        data: '',
+        success: function(data, textStatus, xhr) {
+
             // If we got 210 (processing) wait 2 sec and call themself again
-            if (xhr.status === 210) {
+            if (xhr.status === 210)
+            {
                 setTimeout(CheckSimulation, 2000, simulation_id);
             }
 
             // Simulation is ended up and we can grab the packets
-            if (xhr.status === 200) {
+            if (xhr.status === 200)
+            {
                 packets = JSON.parse(data.packets);
                 pcaps = data.pcaps;
 
@@ -1243,102 +1287,110 @@ const CheckSimulation = function (simulation_id) {
                 packets_not_filtered = null;
                 SetPacketFilter();
 
-                const answerButton = document.querySelector(
-                    'button[name="answerQuestion"]'
-                );
+                // TODO: подумать над этим
+                // SetNetworkPlayerState(0);
+
+                const answerButton = document.querySelector('button[name="answerQuestion"]');
                 if (answerButton) {
                     answerButton.disabled = false;
                 }
             }
         },
-        error: function (xhr) {
-            console.log("Cannot check simulation id = " + simulation_id);
+        error: function(xhr) {
+            console.log('Cannot check simulation id = ' + simulation_id);
             SetNetworkPlayerState(-1);
         },
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Update edge configuration
 const UpdateEdgeConfiguration = (data) => {
     SetNetworkPlayerState(-1);
 
     return $.ajax({
-        type: "POST",
-        url: "/edge/save_config",
+        type: 'POST',
+        url: '/edge/save_config',
         data: data,
-        complete: function () {
+        complete: function() {
             DrawGraph();
-            $("#config_edge_main_form_submit_button").html("Сохранить");
+            $('#config_edge_main_form_submit_button').html('Сохранить');
         },
-        error: function (xhr) {
-            console.log("Не удалось обновить конфигурацию ребра");
+        error: function(xhr) {
+            console.log('Не удалось обновить конфигурацию ребра');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
 };
 
-const InsertWaitingTime = function () {
+
+const InsertWaitingTime = function ()
+{
     // Get last emulation task time
     // and send request to get count of emulating networks before this time
     $.ajax({
-        type: "GET",
-        url: "emulation_queue/time",
-        data: "",
-        success: function (data) {
+        type: 'GET',
+        url: 'emulation_queue/time',
+        data: '',
+        success: function(data) {
             // Run helper function with time param
-            InsertWaitingTimeHelper(data.time);
+            InsertWaitingTimeHelper(data.time)
         },
-        error: function (err) {
+        error: function(err) {
             console.error("Failed to fetch queue time:", err);
         },
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
-const InsertWaitingTimeHelper = function (time_filter) {
+const InsertWaitingTimeHelper = function(time_filter) {
     // Insert field with queue size
     $.ajax({
-        type: "GET",
-        url: "emulation_queue/size?time-filter=" + time_filter.toString(),
-        data: "",
-        success: function (data) {
+        type: 'GET',
+        url: 'emulation_queue/size?time-filter=' + time_filter.toString(),
+        data: '',
+        success: function(data) {
             const queue_size = parseInt(data.size);
 
-            if ($("#NetworkPlayerLabel").text().startsWith("Шаг:")) {
+            if ($('#NetworkPlayerLabel').text().startsWith("Шаг:")) {
                 return;
             } else if (queue_size <= 1) {
-                $("#NetworkPlayerLabel").text("Ожидание 10-15 сек.");
+                $('#NetworkPlayerLabel').text("Ожидание 10-15 сек.");
             } else {
-                $("#NetworkPlayerLabel").text(`Место в очереди ${queue_size}`);
+                $('#NetworkPlayerLabel').text(`Место в очереди ${queue_size}`);
 
                 // Update waiting time
                 setTimeout(() => InsertWaitingTimeHelper(time_filter), 500);
             }
+
         },
-        error: function (err) {
+        error: function(err) {
             console.error("Failed to fetch queue size:", err);
         },
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Update host configuration
-const UpdateHostConfiguration = function (data, host_id) {
+const UpdateHostConfiguration = function (data, host_id)
+{
     // Reset network player
     SetNetworkPlayerState(-1);
 
     $.ajax({
-        type: "POST",
-        url: "/host/save_config",
+        type: 'POST',
+        url: '/host/save_config',
         data: data,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
-                if (!data.warning) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
+                if (!data.warning){
+
                     // Update nodes
                     nodes = data.nodes;
 
@@ -1350,50 +1402,53 @@ const UpdateHostConfiguration = function (data, host_id) {
                 }
 
                 // Ok, let's try to update host config form
-                let n = nodes.find((n) => n.data.id === host_id);
+                let n = nodes.find(n => n.data.id === host_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого хоста");
+                    ClearConfigForm('Нет такого хоста');
                     return;
                 }
 
-                if (n.config.type === "host") {
+                if (n.config.type === 'host'){
                     ShowHostConfig(n);
                 } else {
-                    ClearConfigForm("Узел есть, но это не хост");
+                    ClearConfigForm('Узел есть, но это не хост');
                     return;
                 }
 
-                if (data.warning) {
+                if (data.warning){
                     HostWarningMsg(data.warning);
                 }
             }
         },
-        error: function (xhr) {
-            console.log("Не удалось обновить конфигурацию хоста");
+        error: function(xhr) {
+            console.log('Не удалось обновить конфигурацию хоста');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Delete job from host
-const DeleteJobFromHost = function (host_id, job_id, network_guid) {
+const DeleteJobFromHost = function (host_id, job_id, network_guid)
+{
     // Reset network player
     SetNetworkPlayerState(-1);
 
     let data = {
-        id: job_id,
-        guid: network_guid,
+      id: job_id,
+      guid: network_guid,
     };
 
     $.ajax({
-        type: "POST",
-        url: "/host/delete_job",
+        type: 'POST',
+        url: '/host/delete_job',
         data: data,
         encode: true,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
                 // Update jobs
                 jobs = data.jobs;
 
@@ -1401,45 +1456,49 @@ const DeleteJobFromHost = function (host_id, job_id, network_guid) {
                 DrawGraph();
 
                 // Ok, let's try to update host config form
-                let n = nodes.find((n) => n.data.id === host_id);
+                let n = nodes.find(n => n.data.id === host_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого хоста");
+                    ClearConfigForm('Нет такого хоста');
                     return;
                 }
 
-                if (n.config.type === "host") {
+                if (n.config.type === 'host'){
                     ShowHostConfig(n);
                 } else {
-                    ClearConfigForm("Узел есть, но это не хост");
+                    ClearConfigForm('Узел есть, но это не хост');
                 }
+
             }
         },
-        error: function (xhr) {
-            console.log("Не удалось удалить команду");
+        error: function(xhr) {
+            console.log('Не удалось удалить команду');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Delete job from router
-const DeleteJobFromRouter = function (router_id, job_id, network_guid) {
+const DeleteJobFromRouter = function (router_id, job_id, network_guid)
+{
     // Reset network player
     SetNetworkPlayerState(-1);
 
     let data = {
-        id: job_id,
-        guid: network_guid,
+      id: job_id,
+      guid: network_guid,
     };
 
     $.ajax({
-        type: "POST",
-        url: "/host/delete_job",
+        type: 'POST',
+        url: '/host/delete_job',
         data: data,
         encode: true,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
                 // Update jobs
                 jobs = data.jobs;
 
@@ -1447,45 +1506,48 @@ const DeleteJobFromRouter = function (router_id, job_id, network_guid) {
                 DrawGraph();
 
                 // Ok, let's try to update host config form
-                let n = nodes.find((n) => n.data.id === router_id);
+                let n = nodes.find(n => n.data.id === router_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого хоста");
+                    ClearConfigForm('Нет такого хоста');
                     return;
                 }
 
-                if (n.config.type === "router") {
+                if (n.config.type === 'router'){
                     ShowRouterConfig(n);
                 } else {
-                    ClearConfigForm("Узел есть, но это не раутер");
+                    ClearConfigForm('Узел есть, но это не раутер');
                 }
             }
         },
-        error: function (xhr) {
-            console.log("Не удалось удалить команду");
+        error: function(xhr) {
+            console.log('Не удалось удалить команду');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Delete job from server
-const DeleteJobFromServer = function (server_id, job_id, network_guid) {
+const DeleteJobFromServer = function (server_id, job_id, network_guid)
+{
     // Reset network player
     SetNetworkPlayerState(-1);
 
     let data = {
-        id: job_id,
-        guid: network_guid,
+      id: job_id,
+      guid: network_guid,
     };
 
     $.ajax({
-        type: "POST",
-        url: "/host/delete_job",
+        type: 'POST',
+        url: '/host/delete_job',
         data: data,
         encode: true,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
                 // Update jobs
                 jobs = data.jobs;
 
@@ -1493,46 +1555,51 @@ const DeleteJobFromServer = function (server_id, job_id, network_guid) {
                 DrawGraph();
 
                 // Ok, let's try to update host config form
-                let n = nodes.find((n) => n.data.id === server_id);
+                let n = nodes.find(n => n.data.id === server_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого хоста");
+                    ClearConfigForm('Нет такого хоста');
                     return;
                 }
 
-                if (n.config.type === "server") {
+                if (n.config.type === 'server'){
                     ShowServerConfig(n);
                 } else {
-                    ClearConfigForm("Узел есть, но это не сервер");
+                    ClearConfigForm('Узел есть, но это не сервер');
                 }
             }
         },
-        error: function (xhr) {
-            console.log("Не удалось удалить команду");
+        error: function(xhr) {
+            console.log('Не удалось удалить команду');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Update router configuration
-const UpdateRouterConfiguration = function (data, router_id) {
+const UpdateRouterConfiguration = function (data, router_id)
+{
     // Reset network player
     SetNetworkPlayerState(-1);
 
     $.ajax({
-        type: "POST",
-        url: "/host/router_save_config",
+        type: 'POST',
+        url: '/host/router_save_config',
         data: data,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
                 // Update nodes
-                if (data.nodes) {
+                if (data.nodes)
+                {
                     nodes = data.nodes;
                 }
 
                 // Update jobs
-                if (data.jobs) {
+                if (data.jobs)
+                {
                     jobs = data.jobs;
                 }
 
@@ -1540,50 +1607,57 @@ const UpdateRouterConfiguration = function (data, router_id) {
                 DrawGraph();
 
                 // Ok, let's try to update router config form
-                let n = nodes.find((n) => n.data.id === router_id);
+                let n = nodes.find(n => n.data.id === router_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого раутера");
+                    ClearConfigForm('Нет такого раутера');
                     return;
                 }
 
-                if (n.config.type === "router") {
+                if (n.config.type === 'router'){
                     ShowRouterConfig(n);
                 } else {
-                    ClearConfigForm("Узел есть, но это не раутер");
+                    ClearConfigForm('Узел есть, но это не раутер');
                     return;
                 }
 
-                if (data.warning) {
+                if (data.warning)
+                {
                     HostWarningMsg(data.warning);
                 }
             }
+
         },
-        error: function (xhr) {
-            console.log("Не удалось обновить конфигурацию хоста");
+        error: function(xhr) {
+            console.log('Не удалось обновить конфигурацию хоста');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Update server configuration
-const UpdateServerConfiguration = function (data, router_id) {
+const UpdateServerConfiguration = function (data, router_id)
+{
     // Reset network player
     SetNetworkPlayerState(-1);
 
     $.ajax({
-        type: "POST",
-        url: "/host/server_save_config",
+        type: 'POST',
+        url: '/host/server_save_config',
         data: data,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
-                if (!data.warning) {
-                    if (data.nodes) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
+
+                if (!data.warning){
+
+                    if (data.nodes){
                         nodes = data.nodes;
                     }
 
-                    if (data.jobs) {
+                    if (data.jobs){
                         jobs = data.jobs;
                     }
 
@@ -1592,41 +1666,46 @@ const UpdateServerConfiguration = function (data, router_id) {
                 }
 
                 // Ok, let's try to update router config form
-                let n = nodes.find((n) => n.data.id === router_id);
+                let n = nodes.find(n => n.data.id === router_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого сервера");
+                    ClearConfigForm('Нет такого сервера');
                     return;
                 }
 
-                if (n.config.type === "server") {
+                if (n.config.type === 'server'){
                     ShowServerConfig(n);
                 } else {
-                    ClearConfigForm("Узел есть, но это не сервер");
+                    ClearConfigForm('Узел есть, но это не сервер');
                     return;
                 }
 
-                if (data.warning) {
+                if (data.warning)
+                {
                     ServerWarningMsg(data.warning);
                 }
             }
+
         },
-        error: function (xhr) {
-            console.log("Не удалось обновить конфигурацию сервера");
+        error: function(xhr) {
+            console.log('Не удалось обновить конфигурацию сервера');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Update hub configuration
-const UpdateHubConfiguration = function (data, hub_id) {
+const UpdateHubConfiguration = function (data, hub_id)
+{
     $.ajax({
-        type: "POST",
-        url: "/host/hub_save_config",
+        type: 'POST',
+        url: '/host/hub_save_config',
         data: data,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
                 // Update nodes
                 nodes = data.nodes;
 
@@ -1637,39 +1716,42 @@ const UpdateHubConfiguration = function (data, hub_id) {
                 DrawGraph();
 
                 // Ok, let's try to update host config form
-                let n = nodes.find((n) => n.data.id === hub_id);
+                let n = nodes.find(n => n.data.id === hub_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого узла");
+                    ClearConfigForm('Нет такого узла');
                     return;
                 }
 
-                if (n.config.type === "l1_hub") {
+                if (n.config.type === 'l1_hub'){
                     ShowHubConfig(n);
                 } else {
-                    ClearConfigForm("Нет такого хаба");
+                    ClearConfigForm('Нет такого хаба');
                 }
             }
         },
-        error: function (xhr) {
-            console.log("Cannot update host config");
+        error: function(xhr) {
+            console.log('Cannot update host config');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 // Update Switch configuration
-const UpdateSwitchConfiguration = function (data, switch_id) {
+const UpdateSwitchConfiguration = function (data, switch_id)
+{
     // Reset network player
     SetNetworkPlayerState(-1);
 
     $.ajax({
-        type: "POST",
-        url: "/host/switch_save_config",
+        type: 'POST',
+        url: '/host/switch_save_config',
         data: data,
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
+        success: function(data, textStatus, xhr) {
+
+            if (xhr.status === 200)
+            {
                 // Update nodes
                 nodes = data.nodes;
 
@@ -1680,76 +1762,124 @@ const UpdateSwitchConfiguration = function (data, switch_id) {
                 DrawGraph();
 
                 // Ok, let's try to update host config form
-                let n = nodes.find((n) => n.data.id === switch_id);
+                let n = nodes.find(n => n.data.id === switch_id);
 
                 if (!n) {
-                    ClearConfigForm("Нет такого узла");
+                    ClearConfigForm('Нет такого узла');
                     return;
                 }
 
-                if (n.config.type === "l2_switch") {
+                if (n.config.type === 'l2_switch'){
                     ShowSwitchConfig(n);
                 } else {
-                    ClearConfigForm("Нет такого свитча");
+                    ClearConfigForm('Нет такого свитча');
                 }
             }
         },
-        error: function (xhr) {
-            console.log("Cannot update host config");
+        error: function(xhr) {
+            console.log('Cannot update host config');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
-const RunSimulation = function (network_guid) {
+const RunSimulation = function (network_guid)
+{
     $.ajax({
-        type: "POST",
-        url: "/run_simulation?guid=" + network_guid,
-        data: "",
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 201) {
+        type: 'POST',
+        url: '/run_simulation?guid=' + network_guid,
+        data: '',
+        success: function(data, textStatus, xhr) {
+            if (xhr.status === 201)
+            {
                 console.log("Simulation is running!");
                 // Ok, run CheckSimulation
-                if (data.simulation_id) {
+                if (data.simulation_id)
+                {
                     CheckSimulation(data.simulation_id);
                 }
             }
         },
-        error: function (err) {
-            console.log("Cannot run simulation guid = " + network_guid);
+        error: function(err) {
+            console.log('Cannot run simulation guid = ' + network_guid);
             SetNetworkPlayerState(-1);
         },
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
 const FilterPackets = function () {
-    if (filterState.hideARP)
-        packets = packets
-            .map((step) => step.filter((pkt) => !pkt.data.label.startsWith("ARP")))
-            .filter((step) => step.length > 0);
-
-    if (filterState.hideSTP)
         packets = packets
             .map((step) =>
                 step.filter(
                     (pkt) =>
                         !(
-                            pkt.data.label.startsWith("STP") ||
-                            pkt.data.label.startsWith("RSTP")
+                            (filterState.hideARP &&
+                            pkt.data.label.startsWith("ARP")) ||
+                            filterState.hideSTP &&
+                            (pkt.data.label.startsWith("STP") ||
+                            pkt.data.label.startsWith("RSTP"))
                         )
                 )
             )
             .filter((step) => step.length > 0);
-    console.log("filterState:", filterState);
-    console.log("Packets after filters:", packets);
 };
 
-const RecoverFilterStates = function () {
+const SetFilterCheckboxes= function () {
     $("#ARPFilterCheckbox").prop("checked", filterState.hideARP);
     $("#STPFilterCheckbox").prop("checked", filterState.hideSTP);
+};
+
+const UpdateFilterStates = function (settings) {
+    if (!settings) {
+        return;
+    }
+
+    filterState.hideARP = Boolean(settings.hideARP);
+    filterState.hideSTP = Boolean(settings.hideSTP);
+    SetFilterCheckboxes();
+};
+
+const SaveAnimationFilters = function () {
+    if (!window.MIMINET || window.MIMINET.isAuthenticated !== true) {
+        return;
+    }
+
+    const payload = {
+        hide_arp: $("#ARPFilterCheckbox").is(":checked"),
+        hide_stp: $("#STPFilterCheckbox").is(":checked"),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "/user/animation_filters",
+        data: JSON.stringify(payload),
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+            if (!window.MIMINET) {
+                return;
+            }
+
+            const currentFilters = filterState || {};
+            currentFilters.hideARP = Boolean(
+                data && Object.prototype.hasOwnProperty.call(data, "hide_arp")
+                    ? data.hide_arp
+                    : payload.hide_arp
+            );
+            currentFilters.hideSTP = Boolean(
+                data && Object.prototype.hasOwnProperty.call(data, "hide_stp")
+                    ? data.hide_stp
+                    : payload.hide_stp
+            );
+            filterState = currentFilters;
+        },
+        error: function (xhr) {
+            console.log("Cannot save animation filters");
+            console.log(xhr);
+        },
+    });
 };
 
 const SetPacketFilter = function () {
@@ -1766,11 +1896,8 @@ const SetPacketFilter = function () {
     filterState.hideARP = $("#ARPFilterCheckbox").is(":checked");
     filterState.hideSTP = $("#STPFilterCheckbox").is(":checked");
 
-    console.log("filterState after filter call:", filterState);
     if (packets) {
-        console.log("packets here");
         FilterPackets();
-
         SetNetworkPlayerState(0);
     }
 };
@@ -1778,116 +1905,90 @@ const SetPacketFilter = function () {
 // 2 states:
 // Do we need emulation
 // We have a packets and ready to play packets
-const SetNetworkPlayerState = function (simultaion_id) {
+const SetNetworkPlayerState = function (simulation_id) {
+
     // Reset?
-    if (simultaion_id === -1) {
-        packets = null;
+    if (simulation_id === -1) {
         packets_not_filtered = null;
+        packets = null;
         pcaps = [];
         SetNetworkPlayerState(0);
         return;
     }
 
     // If we have packets, then we're ready to run
-    if (packets) {
-        $("#NetworkPlayer").empty();
-        $("#NetworkPlayer").append(
-            '<button type="button" class="btn btn-danger me-2" id="NetworkStopButton"><i class="bx bx-stop fs-xl"></i></button>'
-        );
-        $("#NetworkPlayer").append(
-            '<button type="button" class="btn btn-success" id="NetworkPlayPauseButton" onclick="if (typeof window.ym != \'undefined\'){ym(92293993,\'reachGoal\',\'PlayPauseButton\');}"><i class="bx bx-play fs-xl"></i></button>'
-        );
+    if (packets)
+    {
+        $('#NetworkPlayer').empty();
+        $('#NetworkPlayer').append('<button type="button" class="btn btn-danger me-2" id="NetworkStopButton"><i class="bx bx-stop fs-xl"></i></button>');
+        $('#NetworkPlayer').append('<button type="button" class="btn btn-success" id="NetworkPlayPauseButton" onclick="if (typeof window.ym != \'undefined\'){ym(92293993,\'reachGoal\',\'PlayPauseButton\');}"><i class="bx bx-play fs-xl"></i></button>');
 
         // Init player
         PacketPlayer.getInstance().InitPlayer(packets);
 
         // Configure the slider
-        $("#PacketSliderInput")[0].noUiSlider.updateOptions({
+        $('#PacketSliderInput')[0].noUiSlider.updateOptions({
             start: [1],
             range: {
-                min: 1,
-                max: packets.length,
+                'min': 1,
+                'max': packets.length,
             },
             format: {
-                to: function (val) {
-                    return "" + val;
-                },
-                from: function (val) {
-                    return "" + val;
-                },
+                to: function (val){return '' + val},
+                from: function (val){return '' + val},
             },
             tooltips: false,
         });
 
         // Show Slider on
-        $("#PacketSliderInput").show();
+        $('#PacketSliderInput').show();
 
-        const pkt_count = packets.reduce(
-            (currentCount, row) => currentCount + row.length,
-            0
-        );
-        $("#NetworkPlayerLabel").text(
-            packets.length +
-            " " +
-            NumWord(packets.length, ["шаг", "шага", "шагов"]) +
-            " / " +
-            pkt_count +
-            " " +
-            NumWord(pkt_count, ["пакет", "пакета", "пакетов"])
-        );
+        const pkt_count = packets.reduce((currentCount, row) => currentCount + row.length, 0);
+        $('#NetworkPlayerLabel').text(packets.length + ' ' + NumWord(packets.length, ['шаг', 'шага', 'шагов']) + ' / ' + pkt_count + ' ' + NumWord(pkt_count, ['пакет', 'пакета', 'пакетов']));
 
-        $("#PacketSliderInput")[0].noUiSlider.on("slide", function (e) {
+        $('#PacketSliderInput')[0].noUiSlider.on('slide', function (e) {
             if (!e) return;
-            let x = Math.round(e[0]);
-            PacketPlayer.getInstance().setAnimationTrafficStep(x - 1);
+            let x =  Math.round(e[0]);
+            PacketPlayer.getInstance().setAnimationTrafficStep(x-1);
         });
 
-        $("#PacketSliderInput")[0].noUiSlider.on("update", function (e) {
+        $('#PacketSliderInput')[0].noUiSlider.on('update', function (e) {
             if (!e) return;
-            let x = Math.round(e[0]);
-            if (packets.length === 0) {
-                $("#NetworkPlayerLabel").text("0 пакетов");
+            let x =  Math.round(e[0]);
+            if (packets.length === 0){
+                $('#NetworkPlayerLabel').text('0 пакетов');
                 return;
             }
-            $("#NetworkPlayerLabel").text(
-                "Шаг: " +
-                x +
-                "/" +
-                packets.length +
-                " (" +
-                packets[x - 1].length +
-                " " +
-                NumWord(packets[x - 1].length, ["пакет", "пакета", "пакетов"]) +
-                ")"
-            );
+            $('#NetworkPlayerLabel').text('Шаг: ' + x + '/' + packets.length + ' (' +  packets[x-1].length + ' ' + NumWord(packets[x-1].length, ['пакет', 'пакета', 'пакетов']) + ')');
         });
 
         // Set click handlers
-        $("#NetworkPlayPauseButton").click(function () {
+        $('#NetworkPlayPauseButton').click(function() {
+
             // If btn-success then start to play
-            if ($(this).hasClass("btn-success")) {
-                $(this).removeClass("btn-success");
-                $(this).addClass("btn-warning");
+            if ($(this).hasClass("btn-success")){
+                $(this).removeClass('btn-success');
+                $(this).addClass('btn-warning');
 
                 $(this).empty();
                 $(this).append('<i class="bx bx-pause fs-xl"></i>');
 
                 // If not in pause. Draw a new layout and go.
-                if (!PacketPlayer.getInstance().getPlayerPause()) {
+                if (!PacketPlayer.getInstance().getPlayerPause())
+                {
                     DrawGraphStatic(nodes, edges);
                 }
 
-                PacketPlayer.getInstance().setAnimationTrafficStepCallback(function () {
-                    $("#PacketSliderInput")[0].noUiSlider.set(
-                        PacketPlayer.getInstance().getAnimationTrafficStep()
-                    );
+                PacketPlayer.getInstance().setAnimationTrafficStepCallback(function() {
+                    $('#PacketSliderInput')[0].noUiSlider.set(PacketPlayer.getInstance().getAnimationTrafficStep());
                 });
 
                 PacketPlayer.getInstance().StartPlayer(global_cy);
                 return;
             } else {
-                $(this).removeClass("btn-warning");
-                $(this).addClass("btn-success");
+
+                $(this).removeClass('btn-warning');
+                $(this).addClass('btn-success');
                 $(this).empty();
                 $(this).append('<i class="bx bx-play fs-xl"></i>');
 
@@ -1896,20 +1997,21 @@ const SetNetworkPlayerState = function (simultaion_id) {
             }
         });
 
-        $("#NetworkStopButton").click(function () {
+        $('#NetworkStopButton').click(function() {
+
             PacketPlayer.getInstance().resetAnimationTrafficStepCallback();
             PacketPlayer.getInstance().StopPlayer();
 
             // Reset slider.
-            $("#PacketSliderInput")[0].noUiSlider.set(0);
+            $('#PacketSliderInput')[0].noUiSlider.set(0);
 
             DrawGraph(nodes, edges);
 
-            $("#NetworkPlayPauseButton").removeClass("btn-success");
-            $("#NetworkPlayPauseButton").removeClass("btn-warning");
-            $("#NetworkPlayPauseButton").empty();
-            $("#NetworkPlayPauseButton").addClass("btn-success");
-            $("#NetworkPlayPauseButton").append('<i class="bx bx-play fs-xl"></i>');
+            $('#NetworkPlayPauseButton').removeClass('btn-success');
+            $('#NetworkPlayPauseButton').removeClass('btn-warning');
+            $('#NetworkPlayPauseButton').empty();
+            $('#NetworkPlayPauseButton').addClass('btn-success');
+            $('#NetworkPlayPauseButton').append('<i class="bx bx-play fs-xl"></i>');
             return;
         });
 
@@ -1918,158 +2020,131 @@ const SetNetworkPlayerState = function (simultaion_id) {
 
     // No packets.
     // The network is simulating?
-    if (simultaion_id) {
-        $("#NetworkPlayer").empty();
-        $("#PacketSliderInput").hide();
-        $("#NetworkPlayer").append(
-            '<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton" disabled>Эмулируется...</button>'
-        );
-        InsertWaitingTime();
-        CheckSimulation(simultaion_id);
+    if (simulation_id) {
+        $('#NetworkPlayer').empty();
+        $('#PacketSliderInput').hide();
+        $('#NetworkPlayer').append('<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton" disabled>Эмулируется...</button>');
+        InsertWaitingTime()
+        CheckSimulation(simulation_id);
         return;
     }
 
     // No packets and no simulation.
     // Add emulation button.
-    $("#NetworkPlayer").empty();
-    $("#PacketSliderInput").hide();
-    $("#NetworkPlayer").append(
-        '<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton">Эмулировать</button>'
-    );
-    $("#NetworkPlayerLabel").empty();
+    $('#NetworkPlayer').empty();
+    $('#PacketSliderInput').hide();
+    $('#NetworkPlayer').append('<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton">Эмулировать</button>');
+    $('#NetworkPlayerLabel').empty();
 
-    $("#NetworkEmulateButton").click(function () {
+    $('#NetworkEmulateButton').click(function() {
+
         // Check for job. If no job - show modal and exit.
-        if (!jobs.length) {
-            $("#noJobsModal").modal("toggle");
+        if (!jobs.length)
+        {
+            $('#noJobsModal').modal('toggle');
             return;
         }
 
-        if (nodes.length > 80) {
-            $("#tooManyHostModal").modal("toggle");
+        if (nodes.length > 80)
+        {
+            $('#tooManyHostModal').modal('toggle');
             return;
         }
 
-        if (typeof window.ym != "undefined") {
-            ym(92293993, "reachGoal", "NetworkEmulate");
+        if (typeof window.ym != 'undefined')
+        {
+            ym(92293993,'reachGoal','NetworkEmulate');
         }
 
         RunSimulation(network_guid);
 
-        $("#NetworkPlayer").empty();
-        $("#NetworkPlayer").append(
-            '<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton" disabled>Эмулируется...</button>'
-        );
+        $('#NetworkPlayer').empty();
+        $('#NetworkPlayer').append('<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton" disabled>Эмулируется...</button>');
         InsertWaitingTime();
         return;
     });
 
     return;
-};
+
+}
 
 // 2 states:
 // No packets - disable button.
 // We have a packets and ready to play packets
-const SetSharedNetworkPlayerState = function () {
+const SetSharedNetworkPlayerState = function()
+{
+
     // If we have packets, then we're ready to run
-    if (packets) {
-        $("#NetworkPlayer").empty();
-        $("#NetworkPlayer").append(
-            '<button type="button" class="btn btn-danger me-2" id="NetworkStopButton"><i class="bx bx-stop fs-xl"></i></button>'
-        );
-        $("#NetworkPlayer").append(
-            '<button type="button" class="btn btn-success" id="NetworkPlayPauseButton" onclick="if (typeof window.ym != \'undefined\'){ym(92293993,\'reachGoal\',\'PlayPauseButton\');}"><i class="bx bx-play fs-xl"></i></button>'
-        );
+    if (packets)
+    {
+        $('#NetworkPlayer').empty();
+        $('#NetworkPlayer').append('<button type="button" class="btn btn-danger me-2" id="NetworkStopButton"><i class="bx bx-stop fs-xl"></i></button>');
+        $('#NetworkPlayer').append('<button type="button" class="btn btn-success" id="NetworkPlayPauseButton" onclick="if (typeof window.ym != \'undefined\'){ym(92293993,\'reachGoal\',\'PlayPauseButton\');}"><i class="bx bx-play fs-xl"></i></button>');
 
         // Init player
         PacketPlayer.getInstance().InitPlayer(packets);
 
         // Configure the slider
-        $("#PacketSliderInput")[0].noUiSlider.updateOptions({
+        $('#PacketSliderInput')[0].noUiSlider.updateOptions({
             start: [1],
             range: {
-                min: 1,
-                max: packets.length,
+                'min': 1,
+                'max': packets.length,
             },
             format: {
-                to: function (val) {
-                    return "" + val;
-                },
-                from: function (val) {
-                    return "" + val;
-                },
+                to: function (val){return '' + val},
+                from: function (val){return '' + val},
             },
             tooltips: false,
         });
 
         // Show Slider on
-        $("#PacketSliderInput").show();
+        $('#PacketSliderInput').show();
 
-        const pkt_count = packets.reduce(
-            (currentCount, row) => currentCount + row.length,
-            0
-        );
-        $("#NetworkPlayerLabel").text(
-            packets.length +
-            " " +
-            NumWord(packets.length, ["шаг", "шага", "шагов"]) +
-            " / " +
-            pkt_count +
-            " " +
-            NumWord(pkt_count, ["пакет", "пакета", "пакетов"])
-        );
+        const pkt_count = packets.reduce((currentCount, row) => currentCount + row.length, 0);
+        $('#NetworkPlayerLabel').text(packets.length + ' ' + NumWord(packets.length, ['шаг', 'шага', 'шагов']) + ' / ' + pkt_count + ' ' + NumWord(pkt_count, ['пакет', 'пакета', 'пакетов']));
 
-        $("#PacketSliderInput")[0].noUiSlider.on("slide", function (e) {
+        $('#PacketSliderInput')[0].noUiSlider.on('slide', function (e) {
             if (!e) return;
-            let x = Math.round(e[0]);
-            PacketPlayer.getInstance().setAnimationTrafficStep(x - 1);
+            let x =  Math.round(e[0]);
+            PacketPlayer.getInstance().setAnimationTrafficStep(x-1);
         });
 
-        $("#PacketSliderInput")[0].noUiSlider.on("update", function (e) {
+        $('#PacketSliderInput')[0].noUiSlider.on('update', function (e) {
             if (!e) return;
-            let x = Math.round(e[0]);
-            if (packets.length === 0) {
-                $("#NetworkPlayerLabel").text("0 пакетов");
+            let x =  Math.round(e[0]);
+            if (packets.length === 0){
+                $('#NetworkPlayerLabel').text('0 пакетов');
                 return;
             }
-            $("#NetworkPlayerLabel").text(
-                "Шаг: " +
-                x +
-                "/" +
-                packets.length +
-                " (" +
-                packets[x - 1].length +
-                " " +
-                NumWord(packets[x - 1].length, ["пакет", "пакета", "пакетов"]) +
-                ")"
-            );
+            $('#NetworkPlayerLabel').text('Шаг: ' + x + '/' + packets.length + ' (' +  packets[x-1].length + ' ' + NumWord(packets[x-1].length, ['пакет', 'пакета', 'пакетов']) + ')');
         });
 
         // Set click handlers
-        $("#NetworkPlayPauseButton").click(function () {
+        $('#NetworkPlayPauseButton').click(function() {
+
             // If btn-success then start to play
-            if ($(this).hasClass("btn-success")) {
-                $(this).removeClass("btn-success");
-                $(this).addClass("btn-warning");
+            if ($(this).hasClass("btn-success")){
+                $(this).removeClass('btn-success');
+                $(this).addClass('btn-warning');
 
                 $(this).empty();
                 $(this).append('<i class="bx bx-pause fs-xl"></i>');
 
                 // If not in pause. Draw a new layout and go.
-                if (!PacketPlayer.getInstance().getPlayerPause()) {
+                if (!PacketPlayer.getInstance().getPlayerPause())
+                {
                     DrawGraphStatic(nodes, edges);
                 }
 
-                PacketPlayer.getInstance().setAnimationTrafficStepCallback(function () {
-                    $("#PacketSliderInput")[0].noUiSlider.set(
-                        PacketPlayer.getInstance().getAnimationTrafficStep()
-                    );
+                PacketPlayer.getInstance().setAnimationTrafficStepCallback(function() {
+                    $('#PacketSliderInput')[0].noUiSlider.set(PacketPlayer.getInstance().getAnimationTrafficStep());
                 });
 
                 PacketPlayer.getInstance().StartPlayer(global_cy);
             } else {
-                $(this).removeClass("btn-warning");
-                $(this).addClass("btn-success");
+                $(this).removeClass('btn-warning');
+                $(this).addClass('btn-success');
                 $(this).empty();
                 $(this).append('<i class="bx bx-play fs-xl"></i>');
 
@@ -2078,20 +2153,21 @@ const SetSharedNetworkPlayerState = function () {
             }
         });
 
-        $("#NetworkStopButton").click(function () {
+        $('#NetworkStopButton').click(function() {
+
             PacketPlayer.getInstance().resetAnimationTrafficStepCallback();
             PacketPlayer.getInstance().StopPlayer();
 
             // Reset slider.
-            $("#PacketSliderInput")[0].noUiSlider.set(0);
+            $('#PacketSliderInput')[0].noUiSlider.set(0);
 
             DrawSharedGraph(nodes, edges);
 
-            $("#NetworkPlayPauseButton").removeClass("btn-success");
-            $("#NetworkPlayPauseButton").removeClass("btn-warning");
-            $("#NetworkPlayPauseButton").empty();
-            $("#NetworkPlayPauseButton").addClass("btn-success");
-            $("#NetworkPlayPauseButton").append('<i class="bx bx-play fs-xl"></i>');
+            $('#NetworkPlayPauseButton').removeClass('btn-success');
+            $('#NetworkPlayPauseButton').removeClass('btn-warning');
+            $('#NetworkPlayPauseButton').empty();
+            $('#NetworkPlayPauseButton').addClass('btn-success');
+            $('#NetworkPlayPauseButton').append('<i class="bx bx-play fs-xl"></i>');
             return;
         });
 
@@ -2100,56 +2176,56 @@ const SetSharedNetworkPlayerState = function () {
 
     // No packets
     // Add info button
-    $("#NetworkPlayer").empty();
-    $("#PacketSliderInput").hide();
-    $("#NetworkPlayerLabel").empty();
-    $("#NetworkPlayer").append(
-        '<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton" disabled>Нет эмуляции</button>'
-    );
+    $('#NetworkPlayer').empty();
+    $('#PacketSliderInput').hide();
+    $('#NetworkPlayerLabel').empty();
+    $('#NetworkPlayer').append('<button type="button" class="btn btn-primary w-100" id="NetworkEmulateButton" disabled>Нет эмуляции</button>');
     return;
-};
+}
 
 // Take a picture and update it.
-const TakeGraphPictureAndUpdate = function () {
-    if (!global_cy) {
+const TakeGraphPictureAndUpdate = function()
+{
+    if (!global_cy)
+    {
         return;
     }
 
-    let png_blob = global_cy.png({
-        output: "blob",
-        maxWidth: 512,
-        maxHeight: 512,
-    });
+    let png_blob = global_cy.png({output: 'blob', maxWidth: 512, maxHeight: 512});
 
     $.ajax({
-        type: "POST",
-        url: "/network/upload_network_picture?guid=" + network_guid,
+        type: 'POST',
+        url: '/network/upload_network_picture?guid=' + network_guid,
         data: png_blob,
         processData: false,
-        error: function (xhr) {
-            if (xhr.status != 200) {
-                console.log("Cannot upload graph picture");
+        error: function(xhr) {
+
+            if (xhr.status != 200){
+                console.log('Cannot upload graph picture');
             }
+
         },
-        dataType: "image/png",
+        dataType: 'image/png'
     });
-};
+}
 
 // Calculate drop offsets
-const CalculateDropOffset = function (elem_x, elem_y) {
+const CalculateDropOffset = function(elem_x, elem_y)
+{
     const network_scheme = document.getElementById("network_scheme");
     let offset_left = 0;
     let offset_top = 0;
-    let ret = { x: 0, y: 0 };
+    let ret = {'x' : 0, 'y' : 0};
 
     console.log(elem_x + ", " + elem_y);
 
-    if (network_scheme) {
+    if (network_scheme){
         ret.x += network_scheme.offsetLeft - 25;
         ret.y += network_scheme.offsetTop - 15;
     }
 
-    if (global_cy) {
+    if (global_cy)
+    {
         ret.x = ret.x + global_cy.pan().x;
         ret.y = ret.y + global_cy.pan().y;
 
@@ -2158,75 +2234,76 @@ const CalculateDropOffset = function (elem_x, elem_y) {
     }
 
     return ret;
-};
+}
 
-const UpdateNetworkConfig = function () {
-    if (!global_cy) {
+const UpdateNetworkConfig = function()
+{
+    if (!global_cy){
         return;
     }
 
-    let data = {
-        network_title: network_title,
-        network_description: network_description,
-        zoom: global_cy.zoom(),
-        pan_x: global_cy.pan().x,
-        pan_y: global_cy.pan().y,
-    };
+    let data = {'network_title' : network_title, 'network_description' : network_description,
+    'zoom' : global_cy.zoom(),'pan_x' : global_cy.pan().x, 'pan_y' : global_cy.pan().y};
 
     $.ajax({
-        type: "POST",
-        url: "/network/update_network_config?guid=" + network_guid,
+        type: 'POST',
+        url: '/network/update_network_config?guid=' + network_guid,
         data: JSON.stringify(data),
         contentType: "application/json; charset=utf-8",
-        success: function (data, textStatus, xhr) { },
-        error: function (xhr) {
-            console.log("Cannot update network config");
+        success: function(data, textStatus, xhr) {
+        },
+        error: function(xhr) {
+            console.log('Cannot update network config');
             console.log(xhr);
         },
-        dataType: "json",
+        dataType: 'json'
     });
-};
 
-const CopyNetwork = function () {
+}
+
+const CopyNetwork = function ()
+{
     $.ajax({
-        type: "POST",
-        url: "/network/copy_network?guid=" + network_guid,
-        data: "",
-        success: function (data, textStatus, xhr) {
-            if (xhr.status === 200) {
+        type: 'POST',
+        url: '/network/copy_network?guid=' + network_guid,
+        data: '',
+        success: function(data, textStatus, xhr) {
+            if (xhr.status === 200)
+            {
                 console.log("Copy network is made.");
-                $("#ModalCopy").modal("show");
-                $(".modal-option").click(function () {
-                    var selectedOption = $(this).attr("data-option");
-                    if (selectedOption === "edit") {
+                $('#ModalCopy').modal('show');
+                $('.modal-option').click(function() {
+                var selectedOption = $(this).attr('data-option');
+                    if (selectedOption === 'edit') {
                         var newUrl = data.new_url;
                         window.location.href = newUrl;
-                        console.log("Go to editing");
-                    } else if (selectedOption === "continue") {
-                        console.log("Continue here");
+                        console.log('Go to editing');
+                    } else if (selectedOption === 'continue') {
+                        console.log('Continue here');
                     }
-                    $("#ModalCopy").modal("hide");
+                $('#ModalCopy').modal('hide');
                 });
             }
         },
-        error: function (err) {
-            console.log("Copy has not been made.");
+        error: function(err) {
+            console.log('Copy has not been made.');
         },
         contentType: "application/json",
-        dataType: "json",
+        dataType: 'json'
     });
-};
+}
 
-const NumWord = function (value, words) {
+
+const NumWord = function (value, words){
     value = Math.abs(value) % 100;
     var num = value % 10;
-    if (value > 10 && value < 20) return words[2];
-    if (num > 1 && num < 5) return words[1];
-    if (num == 1) return words[0];
+    if(value > 10 && value < 20) return words[2];
+    if(num > 1 && num < 5) return words[1];
+    if(num == 1) return words[0];
     return words[2];
-};
+}
 
-const SaveNetworkObject = function () {
+const SaveNetworkObject = function (){
     let n = JSON.parse(JSON.stringify(nodes));
     let e = JSON.parse(JSON.stringify(edges));
 
@@ -2236,17 +2313,17 @@ const SaveNetworkObject = function () {
     });
 
     return 0;
-};
+}
 
-const RestoreNetworkObject = function () {
+const RestoreNetworkObject = function (){
     let x = NetworkCache.pop();
 
-    if (!x) {
+    if (!x){
         return;
     }
 
-    nodes = x.nodes;
-    edges = x.edges;
+    nodes=x.nodes;
+    edges=x.edges;
 
     return 0;
-};
+}
