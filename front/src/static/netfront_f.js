@@ -1862,7 +1862,7 @@ const SaveAnimationFilters = function () {
                 return;
             }
 
-            const currentFilters = filterState || {};
+            const currentFilters = window.MIMINET.animationFilters || {};
             currentFilters.hideARP = Boolean(
                 data && Object.prototype.hasOwnProperty.call(data, "hide_arp")
                     ? data.hide_arp
@@ -1873,7 +1873,8 @@ const SaveAnimationFilters = function () {
                     ? data.hide_stp
                     : payload.hide_stp
             );
-            filterState = currentFilters;
+            window.MIMINET.animationFilters = currentFilters;
+            UpdateFilterStates(currentFilters);
         },
         error: function (xhr) {
             console.log("Cannot save animation filters");
@@ -1899,11 +1900,6 @@ const SetPacketFilter = function () {
     if (packets) {
         FilterPackets();
         SetNetworkPlayerState(0);
-    }
-
-    if (window.MIMINET) {
-        const isResetting = window.MIMINET.isResettingFilters === true;
-        window.MIMINET.shouldResetFiltersOnHide = isResetting;
     }
 };
 

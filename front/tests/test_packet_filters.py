@@ -28,10 +28,23 @@ class TestPacketFilters:
         selenium.wait_until_appear(By.CSS_SELECTOR, "#netConfigModal")
 
     def _save_network_settings(self, selenium: MiminetTester):
-        selenium.execute_script("UpdateNetworkConfig(); SetPacketFilter();")
+        submit_button = selenium.find_element(By.ID, "networkConfigurationSubmit")
+        submit_button.click()
+        selenium.wait_for(
+            lambda driver: driver.execute_script(
+                "return !document.querySelector('#netConfigModal')"
+                " || $('#netConfigModal').is(':hidden');"
+            )
+        )
 
-    def _close_settings_modal(self, selenium: MiminetTester):
-        selenium.execute_script("$('#netConfigModal').modal('hide');")
+    def _close_settings_modal(self, selenium: MiminetTester, cancel_button_id="networkConfigurationCancel"):
+        if selenium.execute_script(
+            "return !document.querySelector('#netConfigModal')"
+            " || $('#netConfigModal').is(':hidden');"
+        ):
+            return
+        cancel_button = selenium.find_element(By.ID, cancel_button_id)
+        cancel_button.click()
         selenium.wait_for(
             lambda driver: driver.execute_script(
                 "return !document.querySelector('#netConfigModal')"

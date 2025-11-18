@@ -300,8 +300,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script>
     window.MIMINET = window.MIMINET || {};
     window.MIMINET.isAuthenticated = {{ current_user.is_authenticated|tojson }};
-    window.MIMINET.shouldResetFiltersOnHide = true;
-    window.MIMINET.isResettingFilters = false;
 
     $(document).ready(function() {
         const serverAnimationFilters = window.MIMINET.animationFilters = {{ {
@@ -325,21 +323,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 window.MIMINET.animationFilters || serverAnimationFilters;
             UpdateFilterStates(storedFilters);
 
-            if (typeof SetPacketFilter === "function") {
-                window.MIMINET.isResettingFilters = true;
+            if (typeof packets !== "undefined" && packets) {
                 SetPacketFilter();
-                window.MIMINET.isResettingFilters = false;
             }
         };
 
         $("#networkConfigurationCancel").click(function(){
-            $('#netConfigModal').modal('hide');
             resetAnimationFilters();
+            $('#netConfigModal').modal('hide');
         });
 
         $("#networkConfigurationCancelIcon").click(function(){
-            $('#netConfigModal').modal('hide');
             resetAnimationFilters();
+            $('#netConfigModal').modal('hide');
         });
 
         $("#networkConfigurationSubmit").click(function(){
@@ -368,13 +364,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 $('#network_title_head').text(network_title);
                 return false;
             }
-        });
-
-        $('#netConfigModal').on('hidden.bs.modal', function () {
-            if (window.MIMINET.shouldResetFiltersOnHide) {
-                resetAnimationFilters();
-            }
-            window.MIMINET.shouldResetFiltersOnHide = true;
         });
 
         $("#networkDeleteButton").click(function(){
