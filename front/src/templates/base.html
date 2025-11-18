@@ -314,6 +314,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
 
+        let shouldResetFilters = true;
+
         const resetAnimationFilters = function () {
             if (typeof UpdateFilterStates !== "function") {
                 return;
@@ -326,11 +328,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         $("#networkConfigurationCancel").click(function(){
             $('#netConfigModal').modal('hide');
+            shouldResetFilters = true;
             resetAnimationFilters();
         });
 
         $("#networkConfigurationCancelIcon").click(function(){
             $('#netConfigModal').modal('hide');
+            shouldResetFilters = true;
             resetAnimationFilters();
         });
 
@@ -343,6 +347,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 SaveAnimationFilters();
             }
             $('#netConfigModal').modal('hide');
+            shouldResetFilters = false;
             $('#network_title_head').text(network_title);
         });
 
@@ -357,13 +362,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     SaveAnimationFilters();
                 }
                 $('#netConfigModal').modal('hide');
+                shouldResetFilters = false;
                 $('#network_title_head').text(network_title);
                 return false;
             }
         });
 
         $('#netConfigModal').on('hidden.bs.modal', function () {
-            resetAnimationFilters();
+            if (shouldResetFilters) {
+                resetAnimationFilters();
+            }
+            shouldResetFilters = true;
         });
 
         $("#networkDeleteButton").click(function(){
