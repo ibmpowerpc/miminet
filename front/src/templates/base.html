@@ -302,28 +302,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     window.MIMINET.isAuthenticated = {{ current_user.is_authenticated|tojson }};
 
     $(document).ready(function() {
-        const serverAnimationFilters = window.MIMINET.animationFilters = {{ {
+        const serverAnimationFilters = filterState = {{ {
             "hideARP": current_user.is_authenticated and current_user.animation_hide_arp,
             "hideSTP": current_user.is_authenticated and current_user.animation_hide_stp,
         } | tojson }};
 
         if (typeof UpdateFilterStates === "function") {
             UpdateFilterStates(serverAnimationFilters);
-            if (typeof packets !== "undefined" && packets) {
+            if (packets) {
                 SetPacketFilter();
             }
         }
 
         const resetAnimationFilters = function () {
+            console.log("Resetting filters")
             if (typeof UpdateFilterStates !== "function") {
                 return;
             }
 
             const storedFilters =
-                window.MIMINET.animationFilters || serverAnimationFilters;
+                filterState || serverAnimationFilters;
             UpdateFilterStates(storedFilters);
 
-            if (typeof packets !== "undefined" && packets) {
+            if (packets) {
                 SetPacketFilter();
             }
         };
