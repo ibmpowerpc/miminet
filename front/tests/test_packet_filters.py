@@ -209,3 +209,9 @@ class TestPacketFilters:
                 " && packets.length === 2;"
             )
         )
+
+    # TODO: shared network test
+    def test_filtering_shared_network(
+        self, selenium: MiminetTester, network: MiminetTestNetwork
+    ):
+        raise "TODO"
