@@ -300,6 +300,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script>
     window.MIMINET = window.MIMINET || {};
     window.MIMINET.isAuthenticated = {{ current_user.is_authenticated|tojson }};
+    window.MIMINET.shouldResetFiltersOnHide = true;
+    window.MIMINET.isResettingFilters = false;
 
     $(document).ready(function() {
         const serverAnimationFilters = window.MIMINET.animationFilters = {{ {
@@ -314,8 +316,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             }
         }
 
-        let shouldResetFilters = true;
-
         const resetAnimationFilters = function () {
             if (typeof UpdateFilterStates !== "function") {
                 return;
@@ -324,17 +324,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             const storedFilters =
                 window.MIMINET.animationFilters || serverAnimationFilters;
             UpdateFilterStates(storedFilters);
+
+            if (typeof SetPacketFilter === "function") {
+                window.MIMINET.isResettingFilters = true;
+                SetPacketFilter();
+                window.MIMINET.isResettingFilters = false;
+            }
         };
 
         $("#networkConfigurationCancel").click(function(){
             $('#netConfigModal').modal('hide');
-            shouldResetFilters = true;
             resetAnimationFilters();
         });
 
         $("#networkConfigurationCancelIcon").click(function(){
             $('#netConfigModal').modal('hide');
-            shouldResetFilters = true;
             resetAnimationFilters();
         });
 
@@ -347,7 +351,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 SaveAnimationFilters();
             }
             $('#netConfigModal').modal('hide');
-            shouldResetFilters = false;
             $('#network_title_head').text(network_title);
         });
 
@@ -362,17 +365,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     SaveAnimationFilters();
                 }
                 $('#netConfigModal').modal('hide');
-                shouldResetFilters = false;
                 $('#network_title_head').text(network_title);
                 return false;
             }
         });
 
         $('#netConfigModal').on('hidden.bs.modal', function () {
-            if (shouldResetFilters) {
+            if (window.MIMINET.shouldResetFiltersOnHide) {
                 resetAnimationFilters();
             }
-            shouldResetFilters = true;
+            window.MIMINET.shouldResetFiltersOnHide = true;
         });
 
         $("#networkDeleteButton").click(function(){

@@ -1900,6 +1900,11 @@ const SetPacketFilter = function () {
         FilterPackets();
         SetNetworkPlayerState(0);
     }
+
+    if (window.MIMINET) {
+        const isResetting = window.MIMINET.isResettingFilters === true;
+        window.MIMINET.shouldResetFiltersOnHide = isResetting;
+    }
 };
 
 // 2 states:
