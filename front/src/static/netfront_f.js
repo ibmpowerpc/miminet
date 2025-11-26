@@ -4,8 +4,8 @@ let global_eh = undefined;
 var NetworkUpdateTimeoutId = -1;
 let NetworkCache = [];
 
-let packets_not_filtered = null;
-let filterState = {
+let packetsNotFiltered = null;
+let packetFilterState = {
     hideARP: false,
     hideSTP: false,
 };
@@ -1284,11 +1284,8 @@ const CheckSimulation = function (simulation_id)
                 pcaps = data.pcaps;
 
                 // Set filters
-                packets_not_filtered = null;
+                packetsNotFiltered = null;
                 SetPacketFilter();
-
-                // TODO: подумать над этим
-                // SetNetworkPlayerState(0);
 
                 const answerButton = document.querySelector('button[name="answerQuestion"]');
                 if (answerButton) {
@@ -1816,9 +1813,9 @@ const FilterPackets = function () {
                 step.filter(
                     (pkt) =>
                         !(
-                            (filterState.hideARP &&
+                            (packetFilterState.hideARP &&
                             pkt.data.label.startsWith("ARP")) ||
-                            filterState.hideSTP &&
+                            packetFilterState.hideSTP &&
                             (pkt.data.label.startsWith("STP") ||
                             pkt.data.label.startsWith("RSTP"))
                         )
@@ -1832,38 +1829,38 @@ const UpdateFilterStates = function (settings) {
         return;
     }
 
-    filterState.hideARP = Boolean(settings.hideARP);
-    filterState.hideSTP = Boolean(settings.hideSTP);
-    $("#ARPFilterCheckbox").prop("checked", filterState.hideARP);
-    $("#STPFilterCheckbox").prop("checked", filterState.hideSTP);
+    Object.assign(packetFilterState, settings);
+    $("#ARPFilterCheckbox").prop("checked", packetFilterState.hideARP);
+    $("#STPFilterCheckbox").prop("checked", packetFilterState.hideSTP);
 };
 
 const SaveAnimationFilters = function () {
-    if (!window.MIMINET || window.MIMINET.isAuthenticated !== true) {
+    if (!window.isAuthenticated) {
         return;
     }
+
+    const payload = {
+        hideARP: Boolean(packetFilterState.hideARP),
+        hideSTP: Boolean(packetFilterState.hideSTP),
+    };
 
     $.ajax({
         type: "POST",
         url: "/user/animation_filters",
-        data: JSON.stringify(filterState),
+        data: JSON.stringify(payload),
         contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function (data) {
-            if (!window.MIMINET) {
+            if (!data) {
                 return;
             }
 
-            filterState.hideARP = Boolean(
-                data && Object.prototype.hasOwnProperty.call(data, "hideARP")
-                    ? data.hideARP
-                    : filterState.hideARP
-            );
-            filterState.hideSTP = Boolean(
-                data && Object.prototype.hasOwnProperty.call(data, "hideSTP")
-                    ? data.hideSTP
-                    : filterState.hideSTP
-            );
-            UpdateFilterStates(filterState);
+            const saved = {
+                hideARP: Boolean(data.hideARP),
+                hideSTP: Boolean(data.hideSTP),
+            };
+
+            UpdateFilterStates(saved);
         },
         error: function (xhr) {
             console.log("Cannot save animation filters");
@@ -1873,18 +1870,23 @@ const SaveAnimationFilters = function () {
 };
 
 const SetPacketFilter = function () {
-    console.log("Packet filter call");
-    // SetPacketFilter first call on emulated network
-    if (packets && !packets_not_filtered) {
-        packets_not_filtered = JSON.parse(JSON.stringify(packets)); // Array deep copy
-    }
-    // Numerous filter call, we grab our packets copy to filter it
-    else if (packets_not_filtered) {
-        packets = JSON.parse(JSON.stringify(packets_not_filtered));
+    // If network player UI is absent (e.g., not on network page), skip.
+    if (!document.getElementById("NetworkPlayer") || !document.getElementById("PacketSliderInput")) {
+        return;
     }
 
-    filterState.hideARP = $("#ARPFilterCheckbox").is(":checked");
-    filterState.hideSTP = $("#STPFilterCheckbox").is(":checked");
+    console.log("Packet filter call");
+    // SetPacketFilter first call on emulated network
+    if (packets && !packetsNotFiltered) {
+        packetsNotFiltered = JSON.parse(JSON.stringify(packets)); // Array deep copy
+    }
+    // Numerous filter call, we grab our packets copy to filter it
+    else if (packetsNotFiltered) {
+        packets = JSON.parse(JSON.stringify(packetsNotFiltered));
+    }
+
+    packetFilterState.hideARP = $("#ARPFilterCheckbox").is(":checked");
+    packetFilterState.hideSTP = $("#STPFilterCheckbox").is(":checked");
 
     if (packets) {
         FilterPackets();
@@ -1899,7 +1901,7 @@ const SetNetworkPlayerState = function (simulation_id) {
 
     // Reset?
     if (simulation_id === -1) {
-        packets_not_filtered = null;
+        packetsNotFiltered = null;
         packets = null;
         pcaps = [];
         SetNetworkPlayerState(0);
@@ -1917,6 +1919,10 @@ const SetNetworkPlayerState = function (simulation_id) {
         PacketPlayer.getInstance().InitPlayer(packets);
 
         // Configure the slider
+        if (!$('#PacketSliderInput')[0] || !$('#PacketSliderInput')[0].noUiSlider) {
+            return;
+        }
+
         $('#PacketSliderInput')[0].noUiSlider.updateOptions({
             start: [1],
             range: {
