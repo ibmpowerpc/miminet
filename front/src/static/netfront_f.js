@@ -5,6 +5,12 @@ var NetworkUpdateTimeoutId = -1;
 let NetworkCache = [];
 let lastSimulationId = 0
 
+let packetsNotFiltered = null;
+let packetFilterState = {
+    hideARP: false,
+    hideSTP: false,
+};
+
 const uid = function(){
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
@@ -1312,7 +1318,10 @@ const CheckSimulation = function (simulation_id)
             {
                 packets = JSON.parse(data.packets);
                 pcaps = data.pcaps;
-                SetNetworkPlayerState(0);
+
+                // Set filters
+                packetsNotFiltered = null;
+                SetPacketFilter();
 
                 const answerButton = document.querySelector('button[name="answerQuestion"]');
                 if (answerButton) {
@@ -1875,6 +1884,93 @@ const RunSimulation = function (network_guid)
     });
 }
 
+const FilterPackets = function () {
+        packets = packets
+            .map((step) =>
+                step.filter(
+                    (pkt) =>
+                        !(
+                            (packetFilterState.hideARP &&
+                            pkt.data.label.startsWith("ARP")) ||
+                            packetFilterState.hideSTP &&
+                            (pkt.data.label.startsWith("STP") ||
+                            pkt.data.label.startsWith("RSTP"))
+                        )
+                )
+            )
+            .filter((step) => step.length > 0);
+};
+
+const UpdateFilterStates = function (settings) {
+    if (!settings) {
+        return;
+    }
+
+    Object.assign(packetFilterState, settings);
+    $("#ARPFilterCheckbox").prop("checked", packetFilterState.hideARP);
+    $("#STPFilterCheckbox").prop("checked", packetFilterState.hideSTP);
+};
+
+const SaveAnimationFilters = function () {
+    if (!window.isAuthenticated) {
+        return;
+    }
+
+    const payload = {
+        hideARP: Boolean(packetFilterState.hideARP),
+        hideSTP: Boolean(packetFilterState.hideSTP),
+    };
+
+    $.ajax({
+        type: "POST",
+        url: "/user/animation_filters",
+        data: JSON.stringify(payload),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (data) {
+            if (!data) {
+                return;
+            }
+
+            const saved = {
+                hideARP: Boolean(data.hideARP),
+                hideSTP: Boolean(data.hideSTP),
+            };
+
+            UpdateFilterStates(saved);
+        },
+        error: function (xhr) {
+            console.log("Cannot save animation filters");
+            console.log(xhr);
+        },
+    });
+};
+
+const SetPacketFilter = function () {
+    // If network player UI is absent (e.g., not on network page), skip.
+    if (!document.getElementById("NetworkPlayer") || !document.getElementById("PacketSliderInput")) {
+        return;
+    }
+
+    console.log("Packet filter call");
+    // SetPacketFilter first call on emulated network
+    if (packets && !packetsNotFiltered) {
+        packetsNotFiltered = JSON.parse(JSON.stringify(packets)); // Array deep copy
+    }
+    // Numerous filter call, we grab our packets copy to filter it
+    else if (packetsNotFiltered) {
+        packets = JSON.parse(JSON.stringify(packetsNotFiltered));
+    }
+
+    packetFilterState.hideARP = $("#ARPFilterCheckbox").is(":checked");
+    packetFilterState.hideSTP = $("#STPFilterCheckbox").is(":checked");
+
+    if (packets) {
+        FilterPackets();
+        SetNetworkPlayerState(0);
+    }
+};
+
 // 2 states:
 // Do we need emulation
 // We have a packets and ready to play packets
@@ -1882,6 +1978,7 @@ const SetNetworkPlayerState = function (simulation_id) {
 
     // Reset?
     if (simulation_id === -1) {
+        packetsNotFiltered = null;
         packets = null;
         pcaps = [];
         SetNetworkPlayerState(0);
@@ -1899,6 +1996,10 @@ const SetNetworkPlayerState = function (simulation_id) {
         PacketPlayer.getInstance().InitPlayer(packets);
 
         // Configure the slider
+        if (!$('#PacketSliderInput')[0] || !$('#PacketSliderInput')[0].noUiSlider) {
+            return;
+        }
+
         $('#PacketSliderInput')[0].noUiSlider.updateOptions({
             start: [1],
             range: {
